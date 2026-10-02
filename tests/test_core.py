@@ -82,7 +82,35 @@ class ValidateTests(unittest.TestCase):
         raw = chords_reply()
         raw["chords"][0]["alternative"] = "Gmaj7"
         _, errors = validate(raw, MEAS)
-        self.assertTrue(any("alternative requires candidates" in item for item in errors), errors)
+        self.assertTrue(any("alternative is not a candidate" in item for item in errors), errors)
+
+    def test_options_need_candidates_at_that_time(self):
+        raw = chords_reply()
+        raw["chords"][0].update(conf="low", options=[{"chord": "G"}, {"chord": "Gmaj7"}])
+        _, errors = validate(raw, MEAS)
+        self.assertTrue(any("options need candidates" in item for item in errors), errors)
+        # Scored at another time does not count.
+        elsewhere = dict(MEAS, candidates={"2.1": [{"chord": "Gmaj7", "score": 0.7, "bass_ok": True}]})
+        _, errors = validate(raw, elsewhere)
+        self.assertTrue(any("options need candidates" in item for item in errors), errors)
+
+    def test_options_saved_by_the_scoring_tools_pass(self):
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
+        from save_candidates import save
+        raw = chords_reply()
+        raw["chords"][0].update(conf="low", options=[{"chord": "G"}, {"chord": "Gmaj7"}])
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "measurement.json"
+            path.write_text(json.dumps(MEAS), encoding="utf-8")
+            save(path, {0.5: [{"chord": "Gmaj7", "score": 0.7, "bass_ok": True}]})
+            save(path, {0.50: [{"chord": "Em/G", "score": 0.6, "bass_ok": True}]})
+            measured = json.loads(path.read_text(encoding="utf-8"))
+        self.assertEqual(["Gmaj7", "Em/G"], [row["chord"] for row in measured["candidates"]["0.5"]])
+        _, errors = validate(raw, measured)
+        self.assertEqual(errors, [], errors)
+        raw["chords"][0]["options"][1]["chord"] = "Gsus4"
+        _, errors = validate(raw, measured)
+        self.assertTrue(any("neither the chord nor a candidate" in item for item in errors), errors)
 
     def test_fence_and_prose(self):
         text = "Here is the map:\n```json\n" + json.dumps(chords_reply()) + "\n```"

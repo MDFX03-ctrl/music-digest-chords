@@ -26,7 +26,7 @@ Read these from the song folder. `measurement.json` bundles them exactly as writ
 | `bars` | Output of `tools/bar_report.py`: `key`, `tuning_cents`, `bpm`, `start`, `bars[]`. Each bar has `bar`, `t`, `beats`, `mix`, `vox`, `drums`, `bassdb`, and `parts[]`. Each part has `t`, `bass`, `low`, `chroma` (top 4 pitch-class names). |
 | `chart` | Optional. Verbatim chord-symbol tokens in order, or `null`. Line breaks in the chart are not bar lines. |
 | `chart_verbatim` | `true` only when the tool guarantees the chart was copied token by token. Otherwise treat the chart as missing. |
-| `candidates` | Optional object keyed by part time (as a string). Each value is the chord list scored by `tools/chord_options.py` or `tools/score_candidates.py`: `{chord, score, bass_ok}`. |
+| `candidates` | Optional object keyed by part time (as a string). Each value is the chord list scored by `tools/chord_options.py` or `tools/score_candidates.py` and saved with `--save`: `{chord, score, bass_ok}`. |
 | `duration` | Seconds. |
 
 Pitch-class names use ASCII `b` and `#` (`Bb`, `F#`). `bars.key` is a Krumhansl guess, not a verdict. A stem with `share` under 0.05 is bleed: do not use it as the sole evidence for a chord or a section change.
@@ -150,8 +150,8 @@ That validates `track.json` against this spec. With `measurement.json` present i
 Tools you may run to gather evidence when the part list is not fine enough:
 
 ```
-python tools/chord_options.py songs/FOLDER/track.json songs/FOLDER/stems 0 INDEX
-python tools/score_candidates.py songs/FOLDER/track.json songs/FOLDER/stems 0 "{\"INDEX\":[\"A\",\"Am\"]}"
+python tools/chord_options.py songs/FOLDER/track.json songs/FOLDER/stems 0 INDEX --save songs/FOLDER/measurement.json
+python tools/score_candidates.py songs/FOLDER/track.json songs/FOLDER/stems 0 "{\"INDEX\":[\"A\",\"Am\"]}" --save songs/FOLDER/measurement.json
 python tools/measure_voicings.py songs/FOLDER/track.json songs/FOLDER/stems 0 songs/FOLDER/voicings.json
 ```
 

@@ -2,7 +2,9 @@
 """Rank candidate chords for uncertain spots, from the stems (for option cards in Chord Follower).
 
 Usage: python3 chord_options.py <track.json> <stems dir> <stem offset> <chord index> [<chord index> ...]
+                                 [--save <measurement.json>]
 Prints JSON: {index: [{chord, score, bass_ok}, ...]} (best first). The current chart chord is always scored too.
+--save records the candidates in measurement.json, keyed by chord time, so `check` accepts them as options.
 Score = cosine match between the chord's pitch classes and the harmonic stems' chroma
 (overtones of lower notes removed), plus a bonus when the chord's bass note is the strongest low note.
 The top candidates are *measured suggestions*; the user picks by ear.
@@ -10,8 +12,12 @@ The top candidates are *measured suggestions*; the user picks by ear.
 import json, os, subprocess, sys
 import numpy as np, librosa
 
-track, sdir, off = sys.argv[1], sys.argv[2], float(sys.argv[3])
-idxs = [int(x) for x in sys.argv[4:]]
+args = sys.argv[1:]
+save_to = None
+if '--save' in args:
+    at = args.index('--save'); save_to = args[at + 1]; del args[at:at + 2]
+track, sdir, off = args[0], args[1], float(args[2])
+idxs = [int(x) for x in args[3:]]
 T = json.load(open(track)); T = T.get('data', T); ch = T['chords']
 here = os.path.dirname(os.path.abspath(__file__))
 ROOTS = ['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B']
@@ -66,3 +72,7 @@ for i in idxs:
     out[i] = {'current': cur, 'low': ROOTS[lowpc], 'candidates': top,
               'current_score': next((r['score'] for r in res if r['is_current']), None)}
 print(json.dumps(out, indent=1))
+if save_to:
+    from save_candidates import save
+    save(save_to, {ch[i]['t']: out[i]['candidates'] for i in idxs})
+    print(f"saved candidates to {save_to}")

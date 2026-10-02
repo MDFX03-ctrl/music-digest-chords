@@ -61,6 +61,23 @@ def parse_ok(symbols):
     return json.loads(out)
 
 
+def _candidates_at(candidates, t):
+    """Chord names scored for the part time nearest t, keyed as the tools save them."""
+    try:
+        number = float(t)
+    except (TypeError, ValueError):
+        return set()
+    names = set()
+    for key, rows in candidates.items():
+        try:
+            close = abs(float(key) - number) <= TIME_TOL
+        except (TypeError, ValueError):
+            continue
+        if close and isinstance(rows, list):
+            names.update(row["chord"] for row in rows if isinstance(row, dict) and isinstance(row.get("chord"), str))
+    return names
+
+
 def _usual_beats(bars):
     counts = {}
     for bar in bars.get("bars") or []:
@@ -141,7 +158,7 @@ def validate(obj, measurement):
     times = allowed_times(bars)
     duration = float(measurement.get("duration") or grid.get("duration") or 0)
     chart_ok = bool(measurement.get("chart_verbatim") and measurement.get("chart"))
-    has_candidates = bool(measurement.get("candidates"))
+    candidates = measurement.get("candidates") if isinstance(measurement.get("candidates"), dict) else {}
 
     if status == "needs_remeasure":
         cleaned, more = _empty_status(obj, "needs_remeasure")
@@ -244,16 +261,17 @@ def validate(obj, measurement):
             errors.append(f"{label}.bass_pc is not a pitch class")
         if not isinstance(chord.get("why"), str) or not chord.get("why").strip():
             errors.append(f"{label}.why must be one sentence")
+        scored = _candidates_at(candidates, chord.get("t"))
         alt = chord.get("alternative")
         if alt is not None:
-            if not has_candidates:
-                errors.append(f"{label}.alternative requires candidates")
+            if alt not in scored:
+                errors.append(f"{label}.alternative is not a candidate scored at this time (run a scoring tool with --save)")
             else:
                 _check_symbol(alt, known, f"{label}.alternative", errors)
         opts = chord.get("options")
         if opts is not None:
-            if not has_candidates:
-                errors.append(f"{label}.options require candidates")
+            if not scored:
+                errors.append(f"{label}.options need candidates scored at this time (run a scoring tool with --save)")
             elif conf != "low" or not isinstance(opts, list) or not 2 <= len(opts) <= 3:
                 errors.append(f"{label}.options must be 2 or 3 choices on a low chord")
             else:
@@ -262,6 +280,8 @@ def validate(obj, measurement):
                         errors.append(f"{label}.options[{j}] is not an object")
                         continue
                     _check_symbol(opt.get("chord"), known, f"{label}.options[{j}].chord", errors)
+                    if opt.get("chord") != name and opt.get("chord") not in scored:
+                        errors.append(f"{label}.options[{j}] is neither the chord nor a candidate scored at this time")
                 if name and isinstance(opts[0], dict) and opts[0].get("chord") != name:
                     errors.append(f"{label}.options[0] must equal the chord")
         chords.append({
