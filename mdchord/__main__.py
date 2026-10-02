@@ -102,6 +102,8 @@ def main(argv=None):
     run.add_argument("--artist", default="")
     run.add_argument("--bar-start", type=float, default=None, help="First downbeat in seconds. Default: grid beat phase")
     run.add_argument("--split", type=int, default=2, help="Readings per bar. 2 matches a half-bar harmonic rhythm")
+    run.add_argument("--short", action="append", default=[], metavar="BAR:BEATS",
+                     help="A bar with another beat count, for example 21:2. Repeatable. This is remeasure.short_bars")
     run.add_argument("--beats", type=int, default=4)
     run.add_argument("--bpm-min", type=float, default=60)
     run.add_argument("--bpm-max", type=float, default=140)
@@ -159,6 +161,7 @@ def main(argv=None):
             artist=args.artist,
             bar_start=args.bar_start,
             split=args.split,
+            shorts=args.short,
             beats=args.beats,
             bpm_min=args.bpm_min,
             bpm_max=args.bpm_max,

@@ -90,7 +90,7 @@ Roman numerals are relative to the key in force:
 
 ## Output
 
-Write one JSON object to `track.json`. It adds the song's own metadata to the fields below; `title`, `artist`, `duration`, `beatsPerBar`, `barStart`, and `verified` are extra keys the page reads, and `check` ignores them.
+Write one JSON object to `track.json`. It adds the song's own metadata to the fields below. `title`, `artist`, and `verified` are extra keys the page reads, and `check` ignores them. `duration` is required and equals the measurement's `duration`. `beatsPerBar` and `barStart`, when present, say the same as `beats_per_bar` and `bar_start`.
 
 ```json
 {
@@ -127,14 +127,14 @@ Write one JSON object to `track.json`. It adds the song's own metadata to the fi
 
 `status` is `"chords"`, `"needs_remeasure"`, or `"insufficient"`.
 
-- `"chords"`: `remeasure` is null. `chords` covers the metered span. Every `t` is a part `t` or bar `t` from the input. `bpm` equals `grid.bpm`.
+- `"chords"`: `remeasure` is null. `chords` covers the metered span: events are in time order, one event per time, and the first starts at `bar_start`. Every `t` is a part `t` or bar `t` from the input. `bpm` equals `grid.bpm`.
 - `"needs_remeasure"`: `chords` is `[]` and `sections` is `[]`. Fill `remeasure`:
 
 ```json
 {"bar_start": null, "short_bars": [{"bar": 21, "beats": 2}], "split": null, "reason": "Pattern shifts half a bar at bar 21 on a drum fill."}
 ```
 
-Set only the fields the engine must change. `reason` states the bar and the level or fill evidence.
+Set only the fields the engine must change. `reason` states the bar and the level or fill evidence. They map to `digest --bar-start`, `--split`, and `--short BAR:BEATS`, once per short bar.
 
 - `"insufficient"`: `chords` is `[]`. Use this when `bars` is missing, or when `chart_verbatim` is false and there is no bass evidence. Say what is missing in `notes`.
 
@@ -146,7 +146,7 @@ Set only the fields the engine must change. `reason` states the bar and the leve
 python -m mdchord check songs/FOLDER
 ```
 
-That validates `track.json` against this spec. With `measurement.json` present it also cross-checks chord times against the bar grid, `bpm` against `grid.bpm`, and `conf` `"ok"` against a real chart. Fix every reported problem before handing the song over.
+That validates `track.json` against this spec. With `measurement.json` present it also cross-checks chord times and their order against the bar grid, section starts against bar lines, `bpm` against `grid.bpm`, `duration` against the measurement, and `conf` `"ok"` against a real chart. Fix every reported problem before handing the song over.
 
 Tools you may run to gather evidence when the part list is not fine enough:
 

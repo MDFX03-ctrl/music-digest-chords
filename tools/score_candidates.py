@@ -27,7 +27,10 @@ SR, HOP, LO, NB = 22050, 512, 24, 72
 def L(n):
     p = os.path.join(sdir, n + '.wav')
     return librosa.load(p, sr=SR, mono=True)[0] if os.path.exists(p) else None
-harm = sum(x for x in (L('piano'), L('guitar'), L('other')) if x is not None)
+hs = [x for x in (L('piano'), L('guitar'), L('other')) if x is not None]
+if not hs:
+    raise SystemExit(f"score_candidates: no guitar, piano or other stem in {sdir}; the chroma needs one")
+harm = sum(hs)
 bass = L('bass'); low = harm + (bass if bass is not None else 0)
 Ch = np.abs(librosa.cqt(harm, sr=SR, hop_length=HOP, fmin=librosa.midi_to_hz(LO), n_bins=NB))
 Cl = np.abs(librosa.cqt(low, sr=SR, hop_length=HOP, fmin=librosa.midi_to_hz(LO), n_bins=NB))

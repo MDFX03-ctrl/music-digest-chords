@@ -61,10 +61,12 @@ python -m mdchord digest "AUDIO" --out songs/FOLDER --title "TITLE" --artist "AR
 
 It writes `stems/*.wav`, `input.wav`, `manifest.json`, `grid.json`, `bars.json`, and `measurement.json`. It does not name chords, and it cannot: `digest` only measures. The first run of Demucs is the slow step.
 
+`--chart FILE` is the only way a chart reaches the measurement. The file is UTF-8 text holding the chord symbols the user gave, in order, copied token by token, nothing summarised. Without it `chart_verbatim` is false, `chart_used` must be false, and no chord can be `conf` `"ok"`.
+
 Then:
 
 1. Read `manifest.json`, `grid.json`, `bars.json`, and `prompts/chord-naming.md`.
-2. `grid.json` `change_counts[i]` is how often the bass pitch changes on beat `i` mod 4. If the peak is not index 0, remeasure once with `--bar-start` set to `beat_phase + k * period`, or raise `--split` when changes fall inside the half bar. Do not loop.
+2. `grid.json` `change_counts[i]` is how often the bass pitch changes on beat `i` mod 4. If the peak is not index 0, remeasure once with `--bar-start` set to `beat_phase + k * period`, or raise `--split` when changes fall inside the half bar. A `needs_remeasure` result with `short_bars` is `--short BAR:BEATS`, once per short bar. Do not loop.
 3. Write `track.json`. Bass pitch first. If the bass is under about −60 dB, use the lowest harmonic note. A verbatim chart the user supplied comes next. Chroma only checks quality (minor, sus, a drone). Do not name a chord from chroma alone. No chart and no confident bass: leave the chord null or `N.C.`, `conf` `"low"`. Never set `conf` `"ok"` without a chart whose bass matches. `verified` stays false until the user accepts the names.
 4. Uncertain chords: score 2 or 3 symbols. `--save` records the scores in `measurement.json` as `candidates`, and `check` accepts only options scored at that chord's time. The first option is the current chord. Do not put `N.C.` in the JSON. The page adds it.
 

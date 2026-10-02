@@ -5,6 +5,7 @@ writes is what you name from, following prompts/chord-naming.md.
 """
 
 import json
+import re
 from pathlib import Path
 
 from mdchord.engine import Engine
@@ -29,6 +30,7 @@ def digest(
     artist="",
     bar_start=None,
     split=2,
+    shorts=(),
     beats=4,
     bpm_min=60,
     bpm_max=140,
@@ -40,6 +42,11 @@ def digest(
     dest = Path(out)
     if not audio.is_file():
         raise DigestError([f"audio file not found: {audio}"])
+    shorts = [str(item) for item in shorts or ()]
+    for item in shorts:
+        found = re.fullmatch(r"(\d+):(\d+)", item)
+        if not found or int(found.group(1)) < 1 or not 1 <= int(found.group(2)) <= 12:
+            raise DigestError([f"--short takes BAR:BEATS with a bar from 1 and 1 to 12 beats, not {item!r}"])
     chart_text = ""
     if chart:
         try:
@@ -59,7 +66,7 @@ def digest(
     start = float(grid["beat_phase"] if bar_start is None else bar_start)
 
     mix = dest / "input.wav"
-    tool.bars(stems, mix, grid["bpm"], start, dest / "bars.json", beats, split, ())
+    tool.bars(stems, mix, grid["bpm"], start, dest / "bars.json", beats, split, tuple(shorts))
     bars = load_json(dest / "bars.json")
     duration = float(grid.get("duration") or 0)
     packet = measurement(manifest, grid, bars, chart_text, duration)

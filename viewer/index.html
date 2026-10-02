@@ -9,7 +9,7 @@
   --bg:#EEF0F3; --surface:#FAFBFC; --surface-2:#E2E6EC; --ink:#1B1F27; --muted:#5D6574; --line:#CDD3DB;
   --accent:#A8322D; --accent-soft:#F4DEDB; --on-accent:#FFFFFF; --focus:#2F6FDB;
   --f-tonic:#2B63A6; --f-pre:#2F7D52; --f-dom:#B8660F; --f-sec:#7446A8; --f-bor:#137C7C; --f-unk:#7C8494;
-  --s-vocals:#B03A7A; --s-drums:#7A6A2A; --s-bass:#3553A6; --s-guitar:#C2621A; --s-piano:#1E7F86; --s-other:#6B5AA6; --s-mix:#5D6574; --s-file:#3C7A3C; --s-melody:#1E8F66; --s-keys:#8C4A1C;
+  --s-vocals:#B03A7A; --s-drums:#7A6A2A; --s-bass:#3553A6; --s-guitar:#C2621A; --s-piano:#1E7F86; --s-other:#6B5AA6; --s-mix:#5D6574; --s-file:#3C7A3C; --s-keys:#8C4A1C;
   --lane:#F4F6F8; --lane-alt:#E9EDF1; --grid:#D3D9E1;
   --serif:"Instrument Serif","Iowan Old Style",Georgia,serif;
   --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -22,7 +22,7 @@
     --bg:#111318; --surface:#191C23; --surface-2:#232833; --ink:#E8EAEF; --muted:#9BA3B2; --line:#2D3340;
     --accent:#E0574E; --accent-soft:#3A2224; --on-accent:#1A0E0D; --focus:#7FA8F5;
     --f-tonic:#77A9F0; --f-pre:#6FC495; --f-dom:#F0A554; --f-sec:#B892F0; --f-bor:#5CC9C4; --f-unk:#8E96A6;
-    --s-vocals:#E583B8; --s-drums:#CDB86A; --s-bass:#8CA5F2; --s-guitar:#F2A064; --s-piano:#5FC9CF; --s-other:#AE9CF0; --s-mix:#9BA3B2; --s-file:#86CF86; --s-melody:#5FD3A6; --s-keys:#E8A877;
+    --s-vocals:#E583B8; --s-drums:#CDB86A; --s-bass:#8CA5F2; --s-guitar:#F2A064; --s-piano:#5FC9CF; --s-other:#AE9CF0; --s-mix:#9BA3B2; --s-file:#86CF86; --s-keys:#E8A877;
     --lane:#14171D; --lane-alt:#1B1F27; --grid:#2A303B;
   }
 }
@@ -31,7 +31,7 @@
   --bg:#111318; --surface:#191C23; --surface-2:#232833; --ink:#E8EAEF; --muted:#9BA3B2; --line:#2D3340;
   --accent:#E0574E; --accent-soft:#3A2224; --on-accent:#1A0E0D; --focus:#7FA8F5;
   --f-tonic:#77A9F0; --f-pre:#6FC495; --f-dom:#F0A554; --f-sec:#B892F0; --f-bor:#5CC9C4; --f-unk:#8E96A6;
-  --s-vocals:#E583B8; --s-drums:#CDB86A; --s-bass:#8CA5F2; --s-guitar:#F2A064; --s-piano:#5FC9CF; --s-other:#AE9CF0; --s-mix:#9BA3B2; --s-file:#86CF86; --s-melody:#5FD3A6; --s-keys:#E8A877;
+  --s-vocals:#E583B8; --s-drums:#CDB86A; --s-bass:#8CA5F2; --s-guitar:#F2A064; --s-piano:#5FC9CF; --s-other:#AE9CF0; --s-mix:#9BA3B2; --s-file:#86CF86; --s-keys:#E8A877;
   --lane:#14171D; --lane-alt:#1B1F27; --grid:#2A303B;
 }
 *{box-sizing:border-box}
@@ -64,7 +64,6 @@ button.danger{background:var(--accent);border-color:var(--accent);color:var(--on
 .modal{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;padding:16px;background:color-mix(in srgb, var(--ink) 45%, transparent)}
 .modalcard{width:min(420px,100%);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;box-shadow:0 18px 50px -24px rgba(0,0,0,.55)}
 .modalcard p{margin:0}
-.removed{display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--line);padding-top:10px}
 .rmrow{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:14px}
 .rmrow .t{min-width:0;flex:1 1 220px}
 .deck{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px;display:flex;flex-direction:column;gap:8px;box-shadow:0 6px 18px -12px rgba(0,0,0,.35)}
@@ -117,7 +116,6 @@ button.danger{background:var(--accent);border-color:var(--accent);color:var(--on
 .cvwrap{position:relative;min-width:0}
 #arrCv{display:block;width:100%;touch-action:none;cursor:grab;background:var(--lane)}
 .dawfoot{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:space-between;padding:8px 12px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
-.sounding{font-family:var(--mono)}
 .dawfoot a{color:inherit}
 @media (max-width:620px){:root{--hdrw:112px}.lh input[type=range]{display:none}}
 
@@ -173,17 +171,9 @@ details.panel summary{cursor:pointer;font-weight:600;font-size:14px}
 .inctx{margin-top:6px;min-height:28px;padding:2px 9px;font-size:12px;align-self:flex-start}
 .choicehint{font-size:11px;color:var(--f-dom);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
 .card.choice.picked .choicehint{color:var(--muted)}
-/* exercises */
-.exs{display:flex;flex-direction:column;gap:12px;margin-top:18px}
-.exs > h2{font-family:var(--serif);font-weight:400;font-size:30px;margin:0;line-height:1.1}
-.ex{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
-.ex h3{margin:0;font-size:17px;font-weight:600;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
-.ex h3 .muted{font-weight:400}
-.ex p{margin:0;max-width:75ch;font-size:14px}
-.ex .task{color:var(--muted)}
-.ex .task b{color:var(--ink)}
-.ex .card .beats{font-family:var(--mono);font-size:10px;color:var(--muted)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+.credit{margin-top:28px;padding:12px 0 8px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+.credit a{color:inherit}
 </style>
 
 <div class="wrap">
@@ -244,7 +234,7 @@ details.panel summary{cursor:pointer;font-weight:600;font-size:14px}
       <div class="cvwrap"><canvas id="arrCv" aria-label="Arrangement timeline. Drag to scrub, tap to jump."></canvas></div>
     </div>
     <div class="grip" id="grip" role="separator" aria-orientation="horizontal" aria-label="Drag to make the track lanes taller or shorter" title="Drag to stretch the track lanes" tabindex="0"></div>
-    <div class="dawfoot"><span class="sounding" id="sounding"></span><span id="loadMsg"></span><span>Piano samples: <a href="https://sfzinstruments.github.io/pianos/salamander/" target="_blank" rel="noopener">Salamander Grand Piano</a> by Alexander Holm, CC BY 3.0</span></div>
+    <div class="dawfoot"><span id="loadMsg"></span></div>
   </section>
   </div>
 
@@ -291,7 +281,7 @@ details.panel summary{cursor:pointer;font-weight:600;font-size:14px}
     <div class="row"><span class="save" id="saveMsg"></span><button id="editBtn" aria-pressed="false">Edit rows</button><button id="resetRows" hidden>Reset rows</button></div>
   </div>
   <main class="chart" id="chart"><p class="empty">Loading chords…</p></main>
-  <section class="exs" id="exs" hidden aria-label="Exercises"><h2>Exercises</h2><div id="exList" class="exs"></div></section>
+  <footer class="credit">Piano samples: <a href="https://sfzinstruments.github.io/pianos/salamander/" target="_blank" rel="noopener">Salamander Grand Piano</a> by Alexander Holm, <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC BY 3.0</a>, re-encoded and joined into one file for this page.</footer>
 </div>
 
 <div id="delDlg" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="delTitle">
@@ -337,9 +327,6 @@ details.panel summary{cursor:pointer;font-weight:600;font-size:14px}
     DATA[path] = obj; notify(path);
     if (!onServer()) return Promise.resolve();
     if (/^(picks|layouts)\//.test(path)) return postJSON('/api/write', {path:path, data:obj});
-    if (/^tracks\/[^/]+$/.test(path) && obj && Object.prototype.hasOwnProperty.call(obj, 'removed')){
-      return postJSON('/api/tracks', {id: path.split('/').pop(), removed: obj.removed});
-    }
     return Promise.resolve();
   }
   function snap(path){ var d = read(path); return {id: path.split('/').pop(), exists: !!d, data: function(){ return d; }, metadata: {fromCache:false, hasPendingWrites:false}}; }
@@ -348,11 +335,18 @@ details.panel summary{cursor:pointer;font-weight:600;font-size:14px}
     set: function(obj){ return Promise.resolve(write(path, JSON.parse(JSON.stringify(obj)))); },
     update: function(obj){ return Promise.resolve(write(path, Object.assign({}, read(path)||{}, obj))); },
     delete: function(){
-      try { localStorage.removeItem(LS + path); localStorage.setItem(tombKey(path), '1'); } catch(e){}
-      delete DATA[path]; notify(path);
-      if (onServer() && /^tracks\/[^/]+$/.test(path)){
-        return realFetch('/api/tracks?id=' + encodeURIComponent(path.split('/').pop()), {method:'DELETE'}).then(function(r){ if (!r.ok) throw new Error('not deleted'); });
+      function forget(){
+        try { localStorage.removeItem(LS + path); localStorage.setItem(tombKey(path), '1'); } catch(e){}
+        delete DATA[path]; notify(path);
       }
+      if (onServer() && /^tracks\/[^/]+$/.test(path)){
+        /* the song leaves the page only once its folder is really gone */
+        return realFetch('/api/tracks?id=' + encodeURIComponent(path.split('/').pop()), {method:'DELETE'}).then(function(r){
+          if (!r.ok) return r.text().then(function(text){ throw new Error(text || 'not deleted'); });
+          forget();
+        });
+      }
+      forget();
       return Promise.resolve();
     },
     collection: function(c){ return coll(path + '/' + c); },
@@ -530,8 +524,8 @@ const KIND = {
   guitar:{name:'Guitar', v:'--s-guitar'}, piano:{name:'Piano', v:'--s-piano'}, other:{name:'Other', v:'--s-other'},
   mix:{name:'Mix', v:'--s-mix'}, file:{name:'My file', v:'--s-file'}
 };
-const LH = {ruler:30, chords:46, audio:58, melody:160};
-let lanes = [], trackGen = 0, melLane = null, fileLane = null, globalPeak = 0;
+const LH = {ruler:30, chords:46, audio:58};
+let lanes = [], trackGen = 0, fileLane = null, globalPeak = 0;
 
 function laneAudible(l){ if (audition && l === pianoLane) return true; const anySolo = lanes.some(x => x.solo); return anySolo ? !!l.solo : !l.mute; }
 function mkGain(){ ensureAC(); const g = ac.createGain(); g.gain.value = 0; g.connect(bus); return g; }
@@ -548,11 +542,10 @@ function buildLanes(t){
   lanes.push(pianoLane);
   stems.forEach(s => { const k = KIND[s.kind] || KIND.other; lanes.push({type:'audio', group:'stem', key:'stem:'+(s.kind||s.id), kind:s.kind||'other', name:s.name||k.name, color:k.v, id:s.id, offset:+s.offset||0, h:LH.audio, vol:1, mute:false, solo:false, state:'idle'}); });
   mixes.forEach((a,i) => lanes.push({type:'audio', group:'mix', key:'mix:'+a.id, kind:'mix', name:a.label||('Mix '+(i+1)), color:KIND.mix.v, id:a.id, offset:+a.offset||0, h:LH.audio, vol:1, mute: stems.length ? true : i>0, solo:false, state:'idle'}));
-  melLane = {type:'melody', key:'melody', name:'Melody', color:'--s-melody', h:LH.melody, vol:0.6, mute:true, solo:false};
-  lanes.forEach(l => { if (l.type==='audio') l.gain = mkGain(); }); melLane.gain = mkGain(); pianoLane.gain = mkGain(); pianoLane.fx = pianoFx(pianoLane.gain);
+  lanes.forEach(l => { if (l.type==='audio') l.gain = mkGain(); }); pianoLane.gain = mkGain(); pianoLane.fx = pianoFx(pianoLane.gain);
   // restore this viewer's mixer settings
   let saved = null; try { saved = JSON.parse(store.get('cf.mix.'+t.id) || 'null'); } catch(e){}
-  if (saved) [...lanes, melLane].forEach(l => { const s = saved[l.key]; if (s){ l.vol = s.vol ?? l.vol; l.mute = !!s.mute; l.solo = !!s.solo; } });
+  if (saved) lanes.forEach(l => { const s = saved[l.key]; if (s){ l.vol = s.vol ?? l.vol; l.mute = !!s.mute; l.solo = !!s.solo; } });
   if (vstId) pianoLane.mute = false;
   buildHeaders(); applyGains(true);
   // stems load up front; mixes load when first heard
@@ -569,7 +562,6 @@ function applyGains(quiet){
     const on = laneAudible(l); const was = l.on; l.on = on;
     l.gain.gain.setTargetAtTime(on ? l.vol : 0, ac.currentTime, 0.015);
     if (on && l.type==='audio' && l.state==='idle') queueLoad(l);
-    if (l.type==='melody' && on && !was) melNext = -1;
     if (l.type==='piano' && on && isSamples()) ensurePiano().catch(() => {});
     if (l.type==='piano' && on && !was) pNext = -1;
     if (l.hdr){ l.hdr.classList.toggle('off', !on); l.mBtn?.setAttribute('aria-pressed', String(!!l.mute)); l.sBtn?.setAttribute('aria-pressed', String(!!l.solo)); if (l.vIn) l.vIn.value = l.vol; }
@@ -642,32 +634,35 @@ function startLane(l){
 }
 let voices = [];
 function stopAll(){ lanes.forEach(l => { try { l.node?.stop(); } catch(e){} l.node = null; }); voices.forEach(v => { try { v.stop(); } catch(e){} }); voices = []; }
-function startAll(){ c0 = ac.currentTime + 0.05; t0 = pos; melNext = -1; pNext = -1; lanes.forEach(startLane); }
+function startAll(){ c0 = ac.currentTime + 0.05; t0 = pos; pNext = -1; lanes.forEach(startLane); }
 async function play(){
   if (!T) return; const a = wakeAudio(); if (!a) return;
   a.resume().catch(() => {});
   if (pos >= T.duration - 0.05) pos = 0;
+  // The chord piano is optional. When it cannot load, say so, mute that
+  // lane, and still play the song's own audio.
+  let pianoNote = '';
   if (isSamples()){
     $('loadMsg').textContent = 'Loading the piano samples…';
     try { await ensurePiano(); }
-    catch(e){ $('loadMsg').textContent = 'Piano samples could not load.'; return; }
-    $('loadMsg').textContent = '';
+    catch(e){ pianoNote = 'Piano samples could not load, so the chord piano is muted. '; withoutPiano(); }
   } else if (isVst()){
     $('loadMsg').textContent = 'Rendering the VST3 instrument…';
     try { await prefetchVst(); }
-    catch(e){ $('loadMsg').textContent = String(e.message || e); return; }
-    $('loadMsg').textContent = '';
+    catch(e){ pianoNote = String(e.message || e) + ' The chord piano is muted. '; withoutPiano(); }
   }
+  $('loadMsg').textContent = pianoNote;
   playing = true; startAll(); updPlay();
   const tapT = chartTime();
   setTimeout(() => {
     if (!ac) return;
     const ready = lanes.filter(l => l.type==='audio' && l.buf).length, on = lanes.filter(l => l.type==='audio' && l.on).length, live = lanes.filter(l => l.node).length;
     const moved = (chartTime() - tapT).toFixed(2);
-    $('loadMsg').textContent = (ac.state !== 'running' ? 'Sound is blocked by the device. Turn off Silent mode, check the volume, then tap Play again. ' : '')
+    $('loadMsg').textContent = pianoNote + (ac.state !== 'running' ? 'Sound is blocked by the device. Turn off Silent mode, check the volume, then tap Play again. ' : '')
       + `[audio ${ac.state}, ${ac.sampleRate} Hz, clock +${moved}s, ${ready} ready, ${on} on, ${live} playing]`;
   }, 1500);
 }
+function withoutPiano(){ if (!pianoLane) return; pianoLane.mute = true; applyGains(true); if (pianoLane.statEl) pianoLane.statEl.textContent = 'failed'; }
 function pause(){ if (!playing) return; pos = chartTime(); playing = false; stopAll(); updPlay(); if (audition){ audition = null; applyGains(true); } }
 function seek(ct){
   if (!T) return;
@@ -696,26 +691,6 @@ window.addEventListener('keyup', e => {   // stop a focused button from also "cl
 $('speed').onchange = e => { const v = +e.target.value; if (playing){ pos = chartTime(); stopAll(); speed = v; startAll(); } else speed = v; };
 $('loopBtn').onclick = e => { loop = !loop; e.currentTarget.setAttribute('aria-pressed', String(loop)); };
 
-/* melody synth (plays the transcribed melody as a guide tone) */
-let mel = [], melLo = 55, melHi = 79, melMaxD = 1, melUnsub = null, melNext = -1;
-function firstIdx(t){ let lo=0, hi=mel.length; while (lo<hi){ const m=(lo+hi)>>1; if (mel[m].t < t) lo=m+1; else hi=m; } return lo; }
-function schedMelody(){
-  if (!playing || !melLane?.on || !mel.length || !ac) return;
-  const now = ac.currentTime;
-  if (melNext < 0) melNext = firstIdx(chartAtAc(Math.max(now, c0)) - 0.01);
-  const horizon = chartAtAc(now + 0.3);
-  while (melNext < mel.length && mel[melNext].t < horizon){
-    const n = mel[melNext++]; const at = c0 + (n.t - t0)/speed; if (at < now) continue;
-    const dur = Math.max(0.06, n.d/speed);
-    const o = ac.createOscillator(), g = ac.createGain();
-    o.type = 'triangle'; o.frequency.value = 440 * Math.pow(2, (n.m - 69)/12);
-    g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(0.35, at + 0.012); g.gain.setTargetAtTime(0.22, at + 0.02, 0.08);
-    g.gain.setTargetAtTime(0, at + dur, 0.03);
-    o.connect(g); g.connect(melLane.gain); o.start(at); o.stop(at + dur + 0.2);
-    voices.push(o); o.onended = () => { voices = voices.filter(v => v !== o); };
-  }
-}
-
 /* picks: the chord the user chose on an option card */
 const isNC = s => /^N\.?C\.?$/i.test(String(s||'').trim());
 function optsOf(raw){ const o = Array.isArray(raw?.options) ? raw.options.slice() : []; if (o.length && !o.some(x => isNC(x.chord))) o.push({chord:'N.C.', roman:'—', nc:true}); return o; }
@@ -737,7 +712,7 @@ function loadPicks(trackId){
     const remote = snap.exists ? (snap.data().picks || {}) : {};
     if (JSON.stringify(remote) === JSON.stringify(picks)) return;
     picks = {...remote}; store.set('cf.picks.'+trackId, JSON.stringify(picks));
-    build(); rebuildPianoEvents(); renderExercises(); lastIdx = -2; tick(true);
+    build(); rebuildPianoEvents(); lastIdx = -2; tick(true);
   }, () => {});
 }
 function setPick(key, k){
@@ -957,126 +932,6 @@ $('vstRemove').onclick = async () => {
 refreshVst();
 
 
-/* exercises: chord cards you can hear */
-let exData = null, exUnsub = null, exTimers = [], exPlaying = null;
-function loadExercises(trackId){
-  if (exUnsub){ exUnsub(); exUnsub = null; }
-  exData = null; renderExercises();
-  if (!DB) return;
-  exUnsub = DB.collection('exercises').doc(trackId).onSnapshot(snap => { if (T?.id !== trackId) return; exData = snap.exists ? snap.data() : null; renderExercises(); }, () => {});
-}
-const exKey = (it, j) => 'ex:' + it.id + ':' + j;
-function exStep(it, j){ const st = it.steps[j]; if (!Array.isArray(st.options) || !st.options.length) return st; const k = picks[exKey(it, j)]; const o = st.options[k ?? 0] || st.options[0]; return {...st, chord:o.chord, roman:o.roman ?? st.roman, v: undefined, picked: k != null}; }
-function exVoicing(it, j){ const st = exStep(it, j); const v = st.v || CT.defaultVoicing(st.chord); return v ? v.map(m => m + transpose) : null; }
-function stopExercise(){ exTimers.forEach(clearTimeout); exTimers = []; voices.forEach(v => { try { v.stop(); } catch(e){} }); voices = []; exPlaying = null; document.querySelectorAll('.ex .card.now').forEach(el => el.classList.remove('now')); document.querySelectorAll('.explay').forEach(b => b.textContent = '▶ Play'); }
-async function playExercise(it, cardsEl, btn, loopOn){
-  if (exPlaying === it.id){ stopExercise(); return; }
-  stopExercise(); if (playing) pause();
-  const a = ensureAC(); if (!a) return; a.resume().catch(() => {});
-  if (!previewFx) previewFx = pianoFx(bus);
-  const beat = 60 / (it.bpm || T.bpm || 80);
-  let rendered = null;
-  if (isSamples()){
-    try { await ensurePiano(); }
-    catch(e){ $('loadMsg').textContent = 'Piano samples could not load.'; return; }
-  } else if (isVst()){
-    try {
-      rendered = [];
-      for (let j = 0; j < it.steps.length; j++){
-        const v = exVoicing(it, j);
-        const dur = Math.max(0.35, Math.min(6, (it.steps[j].beats || 4) * beat));
-        rendered.push(v ? await renderVst(v, dur) : null);
-      }
-    } catch(e){ $('loadMsg').textContent = String(e.message || e); return; }
-  } else {
-    $('loadMsg').textContent = 'Chord instrument is off.'; return;
-  }
-  exPlaying = it.id; btn.textContent = '■ Stop';
-  const run = () => {
-    let at = ac.currentTime + 0.08, off = 0;
-    it.steps.forEach((st, j) => {
-      const dur = (st.beats || 4) * beat, v = exVoicing(it, j);
-      if (isVst()){ if (rendered[j]) playVstBuf(rendered[j], at + off, previewFx, 1); }
-      else if (v) strum(v, at + off, dur, previewFx, 1);
-      const tOn = (off + 0.08) * 1000;
-      exTimers.push(setTimeout(() => { cardsEl.forEach((el, k) => el.classList.toggle('now', k === j)); }, tOn));
-      off += dur;
-    });
-    exTimers.push(setTimeout(() => { if (exPlaying !== it.id) return; if (loopOn()) run(); else stopExercise(); }, off * 1000 + 60));
-  };
-  run();
-}
-function renderExercises(){
-  const box = $('exList'), sec = $('exs'); if (!box) return;
-  box.textContent = '';
-  const items = (exData && Array.isArray(exData.items)) ? exData.items : [];
-  sec.hidden = !items.length; if (!items.length) return;
-  items.forEach(it => {
-    const art = document.createElement('article'); art.className = 'ex'; art.id = 'ex-' + it.id;
-    const h = document.createElement('h3'); h.textContent = it.title || 'Exercise';
-    if (it.key){ const k = document.createElement('span'); k.className = 'muted'; k.textContent = 'in ' + (transpose ? transposedKey(it.key) : it.key); h.append(k); }
-    art.append(h);
-    if (it.text){ const p = document.createElement('p'); p.textContent = it.text; art.append(p); }
-    if (it.task){ const p = document.createElement('p'); p.className = 'task'; const b = document.createElement('b'); b.textContent = 'Try: '; p.append(b, it.task); art.append(p); }
-    const row = document.createElement('div'); row.className = 'crow'; const cardsEl = [];
-    const kp = keyPcOf(it.key);
-    it.steps.forEach((raw, j) => {
-      const st = exStep(it, j); const hasOpts = Array.isArray(raw.options) && raw.options.length > 1;
-      const d = document.createElement('div'); d.className = 'card' + (hasOpts ? ' choice' + (st.picked ? ' picked' : '') : ''); d.tabIndex = 0; d.setAttribute('role','button');
-      const top = document.createElement('div'); top.className = 'top';
-      const bt = document.createElement('span'); bt.className = 'beats'; bt.textContent = (raw.beats || 4) + ' beats';
-      const tg = document.createElement('span'); tg.className = hasOpts ? 'choicehint' : 'tag'; tg.textContent = hasOpts ? (st.picked ? 'Your pick' : 'Your choice') : (raw.label || '');
-      top.append(bt, tg);
-      const cc = document.createElement('span'); cc.className = 'c';
-      const dot = document.createElement('i'); dot.className = 'dot'; dot.style.background = `var(${FN_VAR[fnOf(st.roman)]})`;
-      const nm = document.createElement('span'); nm.className = 'name'; nm.textContent = displayChord(st.chord, kp);
-      cc.append(dot, nm);
-      const rr = document.createElement('span'); rr.className = 'r'; rr.textContent = st.roman || '';
-      d.append(top, cc, rr);
-      if (hasOpts){
-        const ob = document.createElement('div'); ob.className = 'opts'; const cur = picks[exKey(it, j)] ?? null;
-        raw.options.forEach((o, k) => {
-          const b = document.createElement('button'); b.type = 'button'; b.className = 'opt'; b.setAttribute('aria-pressed', String(cur === k));
-          b.append(String.fromCharCode(65+k) + ' · ' + displayChord(o.chord, kp)); const sm = document.createElement('small'); sm.textContent = o.roman || ''; b.append(sm);
-          b.onclick = e => { e.stopPropagation(); setPick(exKey(it, j), k); renderExercises(); previewEx(it, j); };
-          ob.append(b);
-        });
-        d.append(ob);
-      }
-      d.onclick = () => previewEx(it, j);
-      d.onkeydown = e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); e.stopPropagation(); previewEx(it, j); } };
-      cardsEl.push(d); row.append(d);
-    });
-    art.append(row);
-    const ctl = document.createElement('div'); ctl.className = 'row';
-    const pb = document.createElement('button'); pb.type = 'button'; pb.className = 'explay play'; pb.textContent = exPlaying === it.id ? '■ Stop' : '▶ Play';
-    const lb = document.createElement('button'); lb.type = 'button'; lb.textContent = 'Loop'; lb.setAttribute('aria-pressed', 'false');
-    lb.onclick = () => lb.setAttribute('aria-pressed', String(lb.getAttribute('aria-pressed') !== 'true'));
-    pb.onclick = () => playExercise(it, cardsEl, pb, () => lb.getAttribute('aria-pressed') === 'true');
-    const tempo = document.createElement('span'); tempo.className = 'muted'; tempo.textContent = (it.bpm || T.bpm || 80) + ' BPM';
-    ctl.append(pb, lb, tempo);
-    art.append(ctl);
-    box.append(art);
-  });
-}
-async function previewEx(it, j){
-  const v = exVoicing(it, j); if (!v) return;
-  if (playing) pause();
-  const a = ensureAC(); if (!a) return; a.resume().catch(() => {});
-  if (!previewFx) previewFx = pianoFx(bus);
-  if (isSamples()){
-    try { await ensurePiano(); strum(v, ac.currentTime + 0.02, 1.8, previewFx, 1); }
-    catch(e){ $('loadMsg').textContent = 'Piano samples could not load.'; }
-    return;
-  }
-  if (isVst()){
-    try { playVstBuf(await renderVst(v, 2), ac.currentTime + 0.02, previewFx, 1); }
-    catch(e){ $('loadMsg').textContent = String(e.message || e); }
-    return;
-  }
-  $('loadMsg').textContent = 'Chord instrument is off.';
-}
-
 /* ---------- lane headers ---------- */
 function buildHeaders(){
   const box = $('hdrs'); box.textContent = '';
@@ -1104,7 +959,6 @@ function buildHeaders(){
     l.mBtn = m; l.sBtn = s; l.vIn = v;
     ctl.append(m, s, v);
     d.append(nm, ctl);
-    if (l.type === 'melody'){ st.textContent = 'guide tone'; }
     if (l.type === 'piano'){ setTimeout(setPianoStat, 0); }
     box.append(d);
   });
@@ -1157,9 +1011,9 @@ const NF = ['C','D♭','D','E♭','E','F','G♭','G','A♭','A','B♭','B'];
 const noteName = m => NF[m%12] + (Math.floor(m/12)-1);
 const isBlk = m => [1,3,6,8,10].includes(m%12);
 function readColors(){ const cs = getComputedStyle(document.documentElement); const v = n => cs.getPropertyValue(n).trim();
-  colors = {lane:v('--lane'), alt:v('--lane-alt'), grid:v('--grid'), ink:v('--ink'), muted:v('--muted'), accent:v('--accent'), surface:v('--surface'), line:v('--line'), mel:v('--s-melody')};
+  colors = {lane:v('--lane'), alt:v('--lane-alt'), grid:v('--grid'), ink:v('--ink'), muted:v('--muted'), accent:v('--accent'), surface:v('--surface'), line:v('--line')};
   for (const k of Object.keys(KIND)) colors[KIND[k].v] = v(KIND[k].v);
-  colors['--s-melody'] = v('--s-melody'); colors['--s-keys'] = v('--s-keys');
+  colors['--s-keys'] = v('--s-keys');
   for (const k of Object.keys(FN_VAR)) colors[k] = v(FN_VAR[k]);
   colorAge = 0; }
 function totalH(){ return lanes.reduce((a,l) => a + l.h, 0) || 200; }
@@ -1248,35 +1102,11 @@ function drawArr(){
         g.globalAlpha = 1;
       }
       if (!T.chords.length){ g.fillStyle = colors.muted; g.font = '12px "IBM Plex Sans", sans-serif'; g.textBaseline = 'middle'; g.fillText('No chords yet', 10, y + H/2); }
-    } else if (l.type === 'melody'){
-      const lo = melLo - 1, hi = melHi + 1, rowH = (H - 4) / (hi - lo + 1), GUT = 34;
-      const Y = m => y + 2 + (hi - m)*rowH;
-      for (let m = lo; m <= hi; m++){ if (isBlk(m)){ g.fillStyle = colors.alt; g.fillRect(0, Y(m), w, rowH); } if (m % 12 === 0){ g.fillStyle = colors.grid; g.fillRect(0, Y(m)+rowH-1, w, 1); } }
-      g.save(); g.beginPath(); g.rect(0, y, w, H); g.clip();
-      let cur = null;
-      if (mel.length){
-        for (let i = firstIdx(vs - melMaxD); i < mel.length && mel[i].t < ve; i++){
-          const n = mel[i]; if (n.t + n.d < vs) continue;
-          const x = X(n.t), wd = Math.max(2, n.d*pxPerSec - 1), yy = Y(n.m), rh = Math.max(2, rowH - 1.2);
-          const act = now >= n.t && now < n.t + n.d; if (act) cur = n.m;
-          g.globalAlpha = act ? 1 : 0.78; g.fillStyle = colors.mel;
-          if (g.roundRect){ g.beginPath(); g.roundRect(x, yy+0.6, wd, rh, Math.min(3, rh/2)); g.fill(); } else g.fillRect(x, yy+0.6, wd, rh);
-          if (act){ g.globalAlpha = 1; g.strokeStyle = colors.ink; g.lineWidth = 1.5; g.strokeRect(x+0.5, yy+1.1, wd-1, rh-1); }
-          if (rowH >= 9 && wd >= 26){ g.globalAlpha = 1; g.fillStyle = colors.lane; g.font = `600 ${Math.min(10, Math.floor(rowH-1))}px "IBM Plex Sans", sans-serif`; g.textBaseline = 'middle'; g.fillText(noteName(n.m), x+3, yy + rowH/2 + 0.5); }
-        }
-      } else {
-        g.fillStyle = colors.muted; g.font = '12px "IBM Plex Sans", sans-serif'; g.textBaseline = 'middle'; g.fillText(melMsg, GUT + 10, y + H/2);
-      }
-      g.globalAlpha = 1; g.restore();
-      g.fillStyle = colors.surface; g.globalAlpha = 0.92; g.fillRect(0, y, GUT, H); g.globalAlpha = 1;
-      g.font = '9px "IBM Plex Mono", monospace'; g.textBaseline = 'middle';
-      for (let m = lo; m <= hi; m++){ if (m % 12 === 0 || (rowH >= 11 && !isBlk(m))){ g.fillStyle = m%12===0 ? colors.ink : colors.muted; g.fillText(noteName(m), 3, Y(m) + rowH/2); } }
-      updSounding(cur, now);
     }
     g.fillStyle = colors.line; g.fillRect(0, y + H - 1, w, 1);
     y += H;
   });
-  // bar grid over audio + melody lanes
+  // bar grid over the audio lanes
   const gy = LH.ruler + LH.chords;
   g.fillStyle = colors.grid; g.globalAlpha = 0.7;
   for (let b = b0; bs + b*bl < ve; b++){ if (b % bStep) continue; const x = X(bs + b*bl); if (x < 0) continue; g.fillRect(x, gy, 1, h - gy); }
@@ -1284,34 +1114,6 @@ function drawArr(){
   // loop region
   if (loop){ const s = sectionAt(Math.max(0, now)); if (s){ g.fillStyle = colors.accent; g.globalAlpha = 0.07; g.fillRect(X(s.start), 0, X(s.end)-X(s.start), h); g.globalAlpha = 1; } }
   const px = X(now); g.fillStyle = colors.accent; g.fillRect(px-1, 0, 2, h);
-}
-let lastSounding = null, melMsg = 'Loading melody…';
-function updSounding(cur, now){
-  if (cur === lastSounding) return; lastSounding = cur;
-  let txt = '';
-  if (cur != null){ const c = T.chords[chordIndexAt(now)]; let rel = '';
-    if (c){ const p = splitChord(c.chord); if (p){ const iv = (cur - rootPc(p.root) + 120) % 12; rel = ` · ${['root','♭9','9','♭3/♯9','3','11 (4)','♯11/♭5','5','♭13/♯5','13 (6)','♭7','maj7'][iv]} of ${pretty(c.chord)}`; } }
-    txt = `Singing ${noteName(cur)}${rel}`; }
-  $('sounding').textContent = txt;
-}
-function showMelLane(v){
-  if (!melLane) return;
-  const has = lanes.includes(melLane); if (v === has) return;
-  if (v) lanes.push(melLane); else { lanes = lanes.filter(l => l !== melLane); if (melLane.gain) melLane.gain.gain.value = 0; melLane.on = false; }
-  buildHeaders(); applyGains(true);
-}
-function loadMelody(trackId){
-  if (melUnsub){ melUnsub(); melUnsub = null; }
-  mel = []; melMsg = 'Loading melody…'; showMelLane(false);
-  if (!DB){ melMsg = 'Melody is not available here.'; return; }
-  melUnsub = DB.doc('tracks/' + trackId + '/parts/melody').onSnapshot(snap => {
-    if (!snap.exists){ mel = []; melMsg = 'No melody transcribed for this track yet.'; showMelLane(false); return; }
-    const x = snap.data(), flat = x.notes || [], div = x.timeDiv || 100; const out = [];
-    for (let i = 0; i + 2 < flat.length; i += 3) out.push({t:flat[i]/div, d:flat[i+1]/div, m:flat[i+2]});
-    out.sort((a,b) => a.t - b.t); mel = out; melNext = -1; showMelLane(out.length > 0);
-    const ms = out.map(n => n.m).sort((a,b)=>a-b); melLo = ms[Math.floor(ms.length*0.005)] ?? 55; melHi = ms[Math.min(ms.length-1, Math.floor(ms.length*0.995))] ?? 79;
-    melMaxD = out.reduce((a,n) => Math.max(a, n.d), 0.5);
-  }, () => { melMsg = 'Melody unavailable right now.'; });
 }
 
 /* ---------- chart rows ---------- */
@@ -1467,7 +1269,7 @@ function tick(force){
   }
 }
 function transposedKey(name){ const m=/^([A-G][♭♯]?)\s*(.*)$/.exec(name); if(!m) return name; const pc=(keyPcOf(name)+transpose+12)%12; return (SHARP_KEYS.has(pc)?SH:FL)[pc]+' '+m[2]; }
-function frame(){ tick(false); try { schedMelody(); } catch(e){} try { schedPiano(); } catch(e){} try { drawArr(); } catch(e){} requestAnimationFrame(frame); }
+function frame(){ tick(false); try { schedPiano(); } catch(e){} try { drawArr(); } catch(e){} requestAnimationFrame(frame); }
 requestAnimationFrame(frame);
 ['wheel','touchmove','keydown'].forEach(ev => window.addEventListener(ev, e => { if (ev!=='keydown' || ['ArrowUp','ArrowDown','PageUp','PageDown'].includes(e.key)) userScrollAt = performance.now(); }, {passive:true}));
 
@@ -1481,7 +1283,7 @@ $('showBoth').onclick=()=>{ show='both'; segSet(['showBoth','showC','showR'],'sh
 $('showC').onclick=()=>{ show='c'; segSet(['showBoth','showC','showR'],'showC'); applyShow(); };
 $('showR').onclick=()=>{ show='r'; segSet(['showBoth','showC','showR'],'showR'); applyShow(); };
 for (let i=-6;i<=6;i++){ const o=document.createElement('option'); o.value=i; o.textContent = i===0 ? 'Original key' : (i>0?'+':'')+i+' semitone'+(Math.abs(i)>1?'s':''); if(i===0) o.selected=true; $('transp').append(o); }
-$('transp').onchange = e => { transpose = +e.target.value; if (T){ build(); rebuildPianoEvents(); renderExercises(); lastIdx=-2; tick(true); } };
+$('transp').onchange = e => { transpose = +e.target.value; if (T){ build(); rebuildPianoEvents(); lastIdx=-2; tick(true); } };
 
 /* ---------- own file lane ---------- */
 function setSyncLabel(){
@@ -1495,7 +1297,7 @@ function addFileLane(blob, name, fresh){
   const off = parseFloat(store.get('cf.off.'+T.id) || '0') || 0;
   fileLane = {type:'audio', group:'file', key:'file', kind:'file', name:'My file', color:KIND.file.v, blob, offset:off, h:LH.audio, vol:1, mute:!fresh, solo:false, state:'idle'};
   fileLane.gain = mkGain();
-  const mi = lanes.findIndex(l => l.type === 'melody'); if (mi < 0) lanes.push(fileLane); else lanes.splice(mi, 0, fileLane);
+  lanes.push(fileLane);
   if (fresh) lanes.forEach(l => { if (l.type === 'audio' && l !== fileLane) l.mute = true; });
   $('fileName').textContent = name || '';
   buildHeaders(); applyGains(); queueLoad(fileLane); setSyncLabel();
@@ -1519,7 +1321,7 @@ async function selectTrack(id){
   rowBreaks = normBreaks(Array.isArray(local) ? local : defaultBreaks());
   buildLanes(t); setSyncLabel();
   build(); lastIdx=-2; tick(true);
-  loadPicks(t.id); build(); loadMelody(t.id); loadVoicings(t.id); loadExercises(t.id); readColors();
+  loadPicks(t.id); build(); loadVoicings(t.id); readColors();
   if (isSamples()) setTimeout(() => { ensurePiano().catch(() => {}); }, 4000);
   if (DB){ try { const L = await DB.collection('layouts').doc(t.id).get(); if (T===t && L.exists && Array.isArray(L.data().breaks)){ rowBreaks = normBreaks(L.data().breaks); store.set('cf.rows.'+t.id, JSON.stringify(rowBreaks)); build(); lastIdx=-2; tick(true); } } catch(e){} }
 }
@@ -1543,17 +1345,12 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('delDlg
 $('delYes').onclick = async () => {
   const t = pendingDelete; closeDelete(); if (!t || !DB) return;
   if (playing && T && T.id === t.id) pause();
-  const ids = [...(t.stems||[]), ...(t.audios||[])].map(x => x && x.id).filter(Boolean);
-  const usedElsewhere = new Set(); tracks.filter(x => x.id !== t.id).forEach(x => [...(x.stems||[]), ...(x.audios||[])].forEach(a => a?.id && usedElsewhere.add(a.id)));
   try {
-    for (const p of ['tracks/'+t.id+'/parts/melody', 'tracks/'+t.id+'/parts/piano', 'layouts/'+t.id, 'picks/'+t.id, 'exercises/'+t.id]){ try { await DB.doc(p).delete(); } catch(e){} }
-    let A = null; try { A = await window.claude?.use?.('assets'); } catch(e){}
-    let freed = 0;
-    if (A) for (const id of ids){ if (usedElsewhere.has(id)) continue; try { const r = await A.delete(id); if (r?.deleted) freed++; } catch(e){} }
     await DB.doc('tracks/' + t.id).delete();
+    for (const p of ['tracks/'+t.id+'/parts/piano', 'layouts/'+t.id, 'picks/'+t.id]){ try { await DB.doc(p).delete(); } catch(e){} }
     const here = location.protocol === 'http:' || location.protocol === 'https:';
-    $('rmMsg').textContent = `Deleted “${t.title}”` + (here ? '. Its folder was removed from the song library.' : (A ? ` (${freed} audio file${freed===1?'':'s'} freed).` : '. The audio files on this computer were left in place.'));
-  } catch(e){ $('rmMsg').textContent = 'Could not delete this song.'; }
+    $('rmMsg').textContent = `Deleted “${t.title}”` + (here ? '. Its folder was removed from the song library.' : '. The audio files on this computer were left in place.');
+  } catch(e){ $('rmMsg').textContent = 'Could not delete this song. ' + String(e.message || e); }
 };
 (async () => {
   sizeCanvas(); readColors();

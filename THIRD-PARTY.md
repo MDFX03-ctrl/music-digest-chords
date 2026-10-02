@@ -25,7 +25,12 @@ Required by CC BY 3.0, and it must stay visible:
   `instruments/salamander.json` as `samplesFrom`.
 - License: Creative Commons Attribution 3.0 Unported (CC BY 3.0)
   https://creativecommons.org/licenses/by/3.0/
-- The credit line lives in the page footer at `viewer/index.html`.
+- This file is an adaptation of that set: the samples were re-encoded to AAC
+  and joined into one file, and each sample's offset and length is recorded in
+  `instruments/salamander.json`. CC BY 3.0 asks for that change to be stated,
+  so it is stated here and in the page footer.
+- The credit line is the page footer of `viewer/index.html`, under the chord
+  chart, so it stays visible whatever the track lanes are doing.
 
 If you redistribute this pack, or a work built on it, keep that credit line.
 
@@ -77,8 +82,8 @@ the page falls back to system fonts and nothing else changes.
 
 ## Python and other dependencies
 
-Installed by the user, not vendored here. See `requirements.txt` for the pinned
-list, and `AGENTS.md` for the CPU-only PyTorch and Demucs install commands.
+Installed by the user, not vendored here. See `requirements.txt` for the list of
+minimum versions, and `AGENTS.md` for the CPU-only PyTorch and Demucs install commands.
 Demucs downloads its model weights (about 52 MB) from Hugging Face on first use.
 Those weights are not part of this repository.
 

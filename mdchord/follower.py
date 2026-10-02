@@ -110,15 +110,27 @@ def iter_songs(root):
 
 
 def song_index(root):
-    used = {}
+    """Song id -> folder.
+
+    A slug on its own when it is unique. When several songs share a slug,
+    each gets a suffix taken from its own path, so an id never moves to a
+    different folder when a same-named song appears or goes away. Remove
+    works by id, so that matters.
+    """
+    by_slug = {}
     for song in iter_songs(root):
-        ident = track_id(song)
-        if ident in used:
+        by_slug.setdefault(track_id(song), []).append(song)
+    used = {}
+    for slug, songs in by_slug.items():
+        if len(songs) == 1:
+            used[slug] = songs[0]
+            continue
+        for song in songs:
             digest = hashlib.md5(str(song.resolve()).encode("utf-8")).hexdigest()
-            ident = track_id(song) + "-" + digest[:6]
+            ident = f"{slug}-{digest[:6]}"
             if ident in used:
-                ident = track_id(song) + "-" + digest
-        used[ident] = song
+                ident = f"{slug}-{digest}"
+            used[ident] = song
     return used
 
 
@@ -157,6 +169,40 @@ def _load(path, default):
     return load_json(path)
 
 
+def _duration_of(track):
+    """The page needs an end time. Take duration, else the last section end,
+    else one bar after the last chord, so a track that forgot it still plays."""
+    try:
+        value = float(track.get("duration") or 0)
+    except (TypeError, ValueError):
+        value = 0.0
+    if value > 0:
+        return value
+    ends = []
+    for row in track.get("sections") or []:
+        if isinstance(row, dict):
+            try:
+                ends.append(float(row.get("end")))
+            except (TypeError, ValueError):
+                continue
+    if ends:
+        return max(ends)
+    times = []
+    for chord in track.get("chords") or []:
+        if isinstance(chord, dict):
+            try:
+                times.append(float(chord.get("t")))
+            except (TypeError, ValueError):
+                continue
+    if not times:
+        return 0
+    try:
+        bar = 60 / float(track.get("bpm")) * float(track.get("beatsPerBar", track.get("beats_per_bar") or 4))
+    except (TypeError, ValueError, ZeroDivisionError):
+        bar = 2.0
+    return max(times) + bar
+
+
 def _page_chord(chord):
     name = chord.get("chord") or "?"
     roman = chord.get("roman") if chord.get("chord") else (chord.get("roman") or "?")
@@ -170,16 +216,6 @@ def _page_chord(chord):
     if options:
         out["options"] = options
     return out
-
-
-def _removed_mark(song):
-    state = _load(song / "library.json", None)
-    if not isinstance(state, dict):
-        return None
-    flag = state.get("removed")
-    if flag is True or (isinstance(flag, str) and flag):
-        return flag
-    return None
 
 
 def _one_track(song, ident):
@@ -205,7 +241,7 @@ def _one_track(song, ident):
         "bpm": track.get("bpm"),
         "beatsPerBar": track.get("beatsPerBar", track.get("beats_per_bar") or 4),
         "barStart": track.get("barStart", track.get("bar_start") or 0),
-        "duration": track.get("duration") or 0,
+        "duration": _duration_of(track),
         "sections": track.get("sections") or [],
         "chords": [_page_chord(chord) for chord in track["chords"]],
         "stems": stems,
@@ -214,9 +250,6 @@ def _one_track(song, ident):
         "created": track.get("created") or "",
         "verified": bool(track.get("verified")),
     }
-    mark = _removed_mark(song)
-    if mark:
-        page["removed"] = mark
     data = {"tracks/" + ident: page}
     voicings = _load(song / "voicings.json", None)
     if isinstance(voicings, dict) and isinstance(voicings.get("voicings"), list):
@@ -236,7 +269,10 @@ def cf_data(root):
     for ident, song in song_index(root).items():
         try:
             data.update(_one_track(song, ident))
-        except (DigestError, OSError, UnicodeError, json.JSONDecodeError):
+        except (DigestError, OSError, UnicodeError, json.JSONDecodeError) as exc:
+            # Say which folder was left out and why. Without this a song that
+            # was just added seems to never show up.
+            print(f"skipped {song}: {exc}", flush=True)
             continue
     piano = sample_doc()
     if piano:
@@ -246,33 +282,6 @@ def cf_data(root):
 
 def data_js(root):
     return "window.__CF_DATA=" + json.dumps(cf_data(root), ensure_ascii=False) + ";\n"
-
-
-def _removed_value(value):
-    if value is False or value is None or value == "":
-        return None
-    if value is True:
-        return True
-    if isinstance(value, str) and len(value) <= 40 and not any(ch in value for ch in "\r\n/\\"):
-        return value
-    raise ValueError("bad removed")
-
-
-def set_removed(root, ident, value):
-    song = find_song(root, ident)
-    if song is None:
-        return "missing"
-    try:
-        stored = _removed_value(value)
-    except ValueError:
-        return "bad"
-    path = song / "library.json"
-    if stored is None:
-        if path.is_file():
-            path.unlink()
-        return "ok"
-    path.write_text(json.dumps({"removed": stored}, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    return "ok"
 
 
 def delete_song(root, ident):
@@ -326,7 +335,10 @@ def build_handler(root):
 
             A Host other than 127.0.0.1 or localhost on this port is a DNS
             rebinding attempt. An Origin from anywhere else is another site in
-            the same browser. Either one gets 403.
+            the same browser. A GET carries no Origin, so a <script> or
+            <audio> tag on another site is caught by the Sec-Fetch-Site label
+            the browser adds instead. Each one gets 403. A plain navigation
+            from elsewhere is allowed: it only shows the user their own page.
             """
             port = self.server.server_address[1]
             allowed = {f"127.0.0.1:{port}", f"localhost:{port}"}
@@ -337,6 +349,13 @@ def build_handler(root):
             if origin is not None and origin.lower() not in {"http://" + item for item in allowed}:
                 self._bytes(403, "text/plain; charset=utf-8", b"forbidden origin")
                 return False
+            site = (self.headers.get("Sec-Fetch-Site") or "").lower()
+            if site and site not in ("same-origin", "none"):
+                navigation = ((self.headers.get("Sec-Fetch-Mode") or "").lower() == "navigate"
+                              and (self.headers.get("Sec-Fetch-Dest") or "").lower() == "document")
+                if not navigation:
+                    self._bytes(403, "text/plain; charset=utf-8", b"forbidden site")
+                    return False
             return True
 
         def do_GET(self):
@@ -407,19 +426,6 @@ def build_handler(root):
                     return
                 self._bytes(200, "audio/wav", body)
                 return
-            if path == "/api/tracks":
-                if not isinstance(payload, dict) or "removed" not in payload:
-                    self._bytes(400, "text/plain; charset=utf-8", b"bad removed")
-                    return
-                result = set_removed(root, payload.get("id"), payload.get("removed"))
-                if result == "missing":
-                    self._bytes(404, "text/plain; charset=utf-8", b"not found")
-                    return
-                if result == "bad":
-                    self._bytes(400, "text/plain; charset=utf-8", b"bad removed")
-                    return
-                self._bytes(204, "text/plain", b"")
-                return
             if path != "/api/write":
                 self._bytes(404, "text/plain; charset=utf-8", b"not found")
                 return
@@ -439,7 +445,16 @@ def build_handler(root):
                 return
             if parsed.path == "/api/tracks":
                 ident = parse_qs(parsed.query).get("id", [""])[0]
-                if not delete_song(root, ident):
+                try:
+                    deleted = delete_song(root, ident)
+                except OSError as exc:
+                    # A stem still open elsewhere (Windows locks it) stops the
+                    # delete part way. Answer with the reason instead of
+                    # dropping the connection with a traceback.
+                    message = f"could not delete the song folder: {exc.strerror or exc}"
+                    self._bytes(409, "text/plain; charset=utf-8", message.encode("utf-8"))
+                    return
+                if not deleted:
                     self._bytes(404, "text/plain; charset=utf-8", b"not found")
                     return
                 self._bytes(204, "text/plain", b"")
@@ -447,7 +462,10 @@ def build_handler(root):
             self._bytes(404, "text/plain; charset=utf-8", b"not found")
 
         def _payload(self):
-            length = int(self.headers.get("Content-Length") or 0)
+            try:
+                length = int(self.headers.get("Content-Length") or 0)
+            except ValueError:
+                return None, b"bad body"
             if length <= 0 or length > 1_000_000:
                 return None, b"bad body"
             try:

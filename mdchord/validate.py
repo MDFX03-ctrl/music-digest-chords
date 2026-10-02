@@ -26,12 +26,20 @@ def allowed_times(bars):
     return times
 
 
+def _number(value):
+    if value is None or isinstance(value, bool):
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
 def snap(value, times):
     if value is None or not times:
         return None
-    try:
-        number = float(value)
-    except (TypeError, ValueError):
+    number = _number(value)
+    if number is None:
         return None
     best = min(times, key=lambda item: abs(item - number))
     if abs(best - number) > TIME_TOL:
@@ -153,14 +161,14 @@ def validate(obj, measurement):
     if obj.get("remeasure") not in (None, {}):
         errors.append("a chords result must not include remeasure")
 
-    try:
-        bpm = float(obj.get("bpm"))
-    except (TypeError, ValueError):
+    grid_bpm = _number(grid.get("bpm"))
+    bpm = _number(obj.get("bpm"))
+    if bpm is None:
         errors.append("bpm is missing")
-        bpm = None
-    else:
-        if abs(bpm - float(grid.get("bpm"))) > 0.05:
-            errors.append("bpm does not match grid.bpm")
+    elif grid_bpm is None:
+        errors.append("the measurement has no grid.bpm to check bpm against")
+    elif abs(bpm - grid_bpm) > 0.05:
+        errors.append("bpm does not match grid.bpm")
 
     bar_start = snap(obj.get("bar_start"), times)
     if bar_start is None:
@@ -170,6 +178,19 @@ def validate(obj, measurement):
     usual = _usual_beats(bars)
     if beats != usual:
         errors.append(f"beats_per_bar must be {usual}")
+
+    # The page reads these three; they must say the same as the checked keys.
+    track_duration = _number(obj.get("duration"))
+    if track_duration is None:
+        errors.append("duration is missing")
+    elif duration and abs(track_duration - duration) > TIME_TOL:
+        errors.append("duration does not match the measurement")
+    if "barStart" in obj and bar_start is not None:
+        camel = _number(obj.get("barStart"))
+        if camel is None or abs(camel - bar_start) > TIME_TOL:
+            errors.append("barStart must equal bar_start")
+    if "beatsPerBar" in obj and obj.get("beatsPerBar") != usual:
+        errors.append(f"beatsPerBar must equal beats_per_bar ({usual})")
 
     chart_used = obj.get("chart_used")
     if chart_used is not chart_ok:
@@ -193,6 +214,18 @@ def validate(obj, measurement):
         known = parse_ok(symbols)
     except (OSError, subprocess.CalledProcessError, json.JSONDecodeError) as exc:
         return obj, [f"chord symbol check failed: {exc}"]
+
+    # The page looks chords up by binary search, so the list has to be in
+    # time order with one event per time, and it has to start where the bars do.
+    ordered = []
+    for chord in chords_in:
+        if isinstance(chord, dict) and _number(chord.get("t")) is not None:
+            number = _number(chord.get("t"))
+            ordered.append(snap(number, times) if snap(number, times) is not None else number)
+    if any(right <= left for left, right in zip(ordered, ordered[1:])):
+        errors.append("chords must be in time order with one event per time")
+    if ordered and bar_start is not None and abs(ordered[0] - bar_start) > TIME_TOL:
+        errors.append("the first chord must start at bar_start")
 
     chords = []
     for i, chord in enumerate(chords_in):
@@ -269,7 +302,8 @@ def validate(obj, measurement):
             "options": opts,
         })
 
-    sections, section_errors = _sections(obj.get("sections"), bar_start, duration)
+    bar_times = [float(bar["t"]) for bar in bars.get("bars") or [] if _number(bar.get("t")) is not None]
+    sections, section_errors = _sections(obj.get("sections"), bar_start, duration, bar_times)
     errors.extend(section_errors)
     keys, key_errors = _keys(obj, times, bar_start)
     errors.extend(key_errors)
@@ -278,7 +312,7 @@ def validate(obj, measurement):
         "status": "chords",
         "key": obj.get("key"),
         "keys": keys,
-        "bpm": None if bpm is None else float(grid.get("bpm")),
+        "bpm": grid_bpm if grid_bpm is not None else bpm,
         "bar_start": bar_start,
         "beats_per_bar": usual,
         "sections": sections,
@@ -349,7 +383,7 @@ def _check_remeasure(spec):
     return errors
 
 
-def _sections(sections, bar_start, duration):
+def _sections(sections, bar_start, duration, bar_times=()):
     if not isinstance(sections, list) or not sections:
         return [], ["sections must partition the song"]
     rows = []
@@ -363,6 +397,8 @@ def _sections(sections, bar_start, duration):
         except (KeyError, TypeError, ValueError):
             errors.append(f"sections[{i}] needs start and end")
             continue
+        if bar_times and snap(start, bar_times) is None:
+            errors.append(f"sections[{i}] must start on a bar line")
         rows.append({"name": str(row["name"]), "start": start, "end": end})
     if not rows or bar_start is None:
         return rows, errors

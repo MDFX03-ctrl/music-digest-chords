@@ -59,15 +59,18 @@ python -m mdchord digest "AUDIO" --out songs\FOLDER --title "TITLE" --artist "AR
 
 This step writes only `stems`, `input.wav`, `manifest.json`, `grid.json`, `bars.json`, and `measurement.json`. It does not name chords, and it cannot: `digest` only measures. The first run of Demucs is the slow step.
 
+Have a chord chart for the song? Put its chord symbols, in order, in a UTF-8 text file and add `--chart chart.txt`. That is the only way a chart gets into the measurement, and the only way a chord can be marked `ok`.
+
 Then, in this order:
 
 1. Read `manifest.json`, `grid.json`, `bars.json`, and `prompts/chord-naming.md`.
-2. `change_counts` tells you which beat the bass changes chord on. If the peak is not beat 1, remeasure once with the downbeat shifted, or raise `--split`. Do not remeasure in a loop.
+2. `change_counts` tells you which beat the bass changes chord on. If the peak is not beat 1, remeasure once with `--bar-start` moved, or raise `--split`. A bar with another beat count is `--short BAR:BEATS`, for example `--short 21:2`. Do not remeasure in a loop.
 3. Write `track.json` yourself. Bass first; when the bass is under about −60 dB, use the lowest harmonic note. Use a chart only when the user supplied one verbatim. Chroma only checks quality (major or minor, sus, a drone). Do not name a chord from chroma alone. With no chart you must not mark `conf` as `ok`. `verified` stays false until the listener accepts the names.
 4. For an uncertain chord, score 2 or 3 options. `--save` records the scores in `measurement.json`; `check` accepts only options scored at that chord's time. The first option is the current guess. Do not write `N.C.` in the JSON; the page adds it.
 
 ```
 python tools/chord_options.py songs\FOLDER\track.json songs\FOLDER\stems 0 INDEX --save songs\FOLDER\measurement.json
+python tools/score_candidates.py songs\FOLDER\track.json songs\FOLDER\stems 0 "{\"INDEX\":[\"A\",\"Am\"]}" --save songs\FOLDER\measurement.json
 python tools/measure_voicings.py songs\FOLDER\track.json songs\FOLDER\stems 0 songs\FOLDER\voicings.json
 ```
 

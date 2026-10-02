@@ -39,9 +39,3 @@ class Engine:
         for item in shorts:
             cmd.extend(["--short", item])
         run(cmd)
-
-    def voicings(self, track, stems, offset, dest):
-        run([
-            sys.executable, str(TOOLS / "measure_voicings.py"), str(track), str(stems),
-            str(offset), str(dest),
-        ])

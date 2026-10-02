@@ -40,6 +40,7 @@ def chords_reply():
     return {
         "status": "chords",
         "key": "D major",
+        "duration": 6.9,
         "bpm": 75,
         "bar_start": 0.5,
         "beats_per_bar": 4,
@@ -129,6 +130,53 @@ class ValidateTests(unittest.TestCase):
         }
         _, errors = validate(raw, MEAS)
         self.assertTrue(any("bar_start" in item for item in errors), errors)
+
+    def test_rejects_chords_out_of_time_order(self):
+        raw = chords_reply()
+        raw["chords"].reverse()
+        _, errors = validate(raw, MEAS)
+        self.assertTrue(any("time order" in item for item in errors), errors)
+        raw = chords_reply()
+        raw["chords"][1]["t"] = 0.52   # snaps onto the first chord's time
+        _, errors = validate(raw, MEAS)
+        self.assertTrue(any("one event per time" in item for item in errors), errors)
+
+    def test_the_first_chord_starts_at_bar_start(self):
+        raw = chords_reply()
+        del raw["chords"][0]
+        _, errors = validate(raw, MEAS)
+        self.assertTrue(any("first chord" in item for item in errors), errors)
+
+    def test_the_page_keys_must_agree_with_the_checked_ones(self):
+        raw = chords_reply()
+        del raw["duration"]
+        _, errors = validate(raw, MEAS)
+        self.assertTrue(any("duration is missing" in item for item in errors), errors)
+        raw = chords_reply()
+        raw.update(duration=9.9, barStart=0.0, beatsPerBar=3)
+        _, errors = validate(raw, MEAS)
+        self.assertTrue(any("duration does not match" in item for item in errors), errors)
+        self.assertTrue(any("barStart" in item for item in errors), errors)
+        self.assertTrue(any("beatsPerBar" in item for item in errors), errors)
+        raw = chords_reply()
+        raw.update(barStart=0.5, beatsPerBar=4)
+        _, errors = validate(raw, MEAS)
+        self.assertEqual(errors, [], errors)
+
+    def test_sections_start_on_bar_lines(self):
+        raw = chords_reply()
+        # 2.1 is a part time inside bar 1, not a bar line.
+        raw["sections"] = [{"name": "Intro", "start": 0.5, "end": 2.1}, {"name": "V1", "start": 2.1, "end": 6.9}]
+        _, errors = validate(raw, MEAS)
+        self.assertTrue(any("bar line" in item for item in errors), errors)
+        raw["sections"] = [{"name": "Intro", "start": 0.5, "end": 3.7}, {"name": "V1", "start": 3.7, "end": 6.9}]
+        _, errors = validate(raw, MEAS)
+        self.assertEqual(errors, [], errors)
+
+    def test_a_measurement_without_grid_bpm_is_reported_not_a_crash(self):
+        raw = chords_reply()
+        _, errors = validate(raw, dict(MEAS, grid={"duration": 6.9}))
+        self.assertTrue(any("grid.bpm" in item for item in errors), errors)
 
     def test_nc_symbol(self):
         raw = chords_reply()
@@ -260,6 +308,35 @@ class PipelineTests(unittest.TestCase):
             engine = FakeEngine()
             digest(audio, root / "out", engine=engine)
             self.assertEqual(engine.starts[0][0], 0.5)
+
+    def test_short_bars_reach_the_bar_report(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            audio = root / "song.wav"
+            audio.write_bytes(b"audio")
+            engine = FakeEngine()
+            digest(audio, root / "out", shorts=["21:2", "40:6"], engine=engine)
+            self.assertEqual(engine.starts[0][2], ("21:2", "40:6"))
+            with self.assertRaises(DigestError):
+                digest(audio, root / "out", shorts=["21"], engine=FakeEngine())
+            with self.assertRaises(DigestError):
+                digest(audio, root / "out", shorts=["0:2"], engine=FakeEngine())
+
+    def test_the_command_line_passes_short_bars_through(self):
+        import mdchord.__main__ as cli
+        seen = {}
+
+        def fake_digest(audio, out, **kwargs):
+            seen.update(kwargs)
+            return {"status": "measured", "out": out}
+
+        old = cli.digest
+        cli.digest = fake_digest
+        try:
+            self.assertEqual(main(["digest", "song.wav", "--out", "x", "--short", "21:2", "--short", "40:6"]), 0)
+        finally:
+            cli.digest = old
+        self.assertEqual(seen["shorts"], ["21:2", "40:6"])
 
     def test_a_missing_audio_file_is_refused_before_stems(self):
         with tempfile.TemporaryDirectory() as tmp:

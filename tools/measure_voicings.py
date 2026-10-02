@@ -14,7 +14,7 @@ Usage: python3 measure_voicings.py <track.json> <stems dir> <stem offset> <out.j
    nearest octave (E1–D3). A measured register is only a soft preference; smoothness wins.
 Falls back to the default voicing when the harmonic stems are too quiet.
 """
-import json, subprocess, sys, os, itertools
+import json, subprocess, sys, os
 import numpy as np, librosa
 
 track, sdir, off, out = sys.argv[1], sys.argv[2], float(sys.argv[3]), sys.argv[4]
@@ -30,7 +30,10 @@ SR, HOP, LO, NB = 22050, 512, 24, 72          # CQT C1..B6
 def load(n):
     p = os.path.join(sdir, n + '.wav')
     return librosa.load(p, sr=SR, mono=True)[0] if os.path.exists(p) else None
-harm = sum(x for x in (load('piano'), load('guitar'), load('other')) if x is not None)
+hs = [x for x in (load('piano'), load('guitar'), load('other')) if x is not None]
+if not hs:
+    raise SystemExit(f"measure_voicings: no guitar, piano or other stem in {sdir}; the voicings are measured from them")
+harm = sum(hs)
 bass = load('bass')
 low = harm + (bass if bass is not None else 0)
 C_h = np.abs(librosa.cqt(harm, sr=SR, hop_length=HOP, fmin=librosa.midi_to_hz(LO), n_bins=NB))

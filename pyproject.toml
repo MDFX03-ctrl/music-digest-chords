@@ -16,8 +16,8 @@ dependencies = [
   "mido>=1.3",
 ]
 
-[project.scripts]
-mdchord = "mdchord.__main__:main"
+# No console script on purpose: the package finds tools/, viewer/ and
+# instruments/ beside itself, so it runs from this folder as "python -m mdchord".
 
 [tool.setuptools.packages.find]
 include = ["mdchord*"]

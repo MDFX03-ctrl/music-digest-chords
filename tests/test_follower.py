@@ -105,6 +105,9 @@ class FollowerTests(unittest.TestCase):
         self.assertIn('id="sM1" hidden', page)
         self.assertIn('id="curDot" hidden', page)
         self.assertIn("vstRemove", page)
+        # The CC BY credit is a page footer, not part of the lanes that collapse.
+        self.assertIn('<footer class="credit">', page)
+        self.assertNotIn("</a> by Alexander Holm", page[:page.index('<footer class="credit">')])
 
         with tempfile.TemporaryDirectory() as tmp:
             song = Path(tmp) / "demo-song"
@@ -202,7 +205,7 @@ def minimal_song(folder, title, chord):
 
 
 class LibraryTests(unittest.TestCase):
-    def test_library_lists_hides_and_deletes_one_song_folder(self):
+    def test_library_lists_and_deletes_one_song_folder(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "songs"
             root.mkdir()
@@ -228,21 +231,9 @@ class LibraryTests(unittest.TestCase):
             try:
                 self.assertTrue(urllib.request.urlopen(f"http://127.0.0.1:{port}/_blob/{alpha_id}").read().startswith(b"RIFF"))
                 self.assertTrue(urllib.request.urlopen(f"http://127.0.0.1:{port}/_blob/{beta_id}").read().startswith(b"RIFF"))
-                status, _ = post(port, "/api/tracks", {"id": "alpha", "removed": "2026-10-02T00:00:00Z"})
-                self.assertEqual(status, 204)
-                state = json.loads((root / "alpha" / "library.json").read_text(encoding="utf-8"))
-                self.assertEqual(state["removed"], "2026-10-02T00:00:00Z")
-                chords = json.loads((root / "alpha" / "track.json").read_text(encoding="utf-8"))
-                self.assertEqual(chords["chords"][0]["chord"], "C")
-                script = urllib.request.urlopen(f"http://127.0.0.1:{port}/data.js").read().decode("utf-8")
-                self.assertIn("2026-10-02T00:00:00Z", script)
-                status, _ = post(port, "/api/tracks", {"id": "alpha", "removed": False})
-                self.assertEqual(status, 204)
-                self.assertFalse((root / "alpha" / "library.json").exists())
-                status, _ = post(port, "/api/tracks", {"id": "../outside", "removed": True})
+                # Remove is the only song control: the old hide flag is gone.
+                status, _ = post(port, "/api/tracks", {"id": "alpha", "removed": True})
                 self.assertEqual(status, 404)
-                status, _ = post(port, "/api/tracks", {"id": "alpha", "removed": "bad/name"})
-                self.assertEqual(status, 400)
                 self.assertFalse((root / "alpha" / "library.json").exists())
                 status, _ = post(port, "/api/write", {"path": "picks/beta", "data": {"picks": {"0": 1}}})
                 self.assertEqual(status, 204)
@@ -279,12 +270,14 @@ class LibraryTests(unittest.TestCase):
             (root / "one" / "libraries.txt").write_text(str(extra), encoding="utf-8")
 
             data = cf_data(root)
-            self.assertIn("tracks/alpha", data)
             self.assertIn("tracks/beta", data)
-            self.assertEqual(data["tracks/alpha"]["title"], "Alpha")
-            other = [key for key in data if key.startswith("tracks/alpha-")]
-            self.assertEqual(len(other), 1)
-            self.assertEqual(data[other[0]]["title"], "Alpha Elsewhere")
+            # Two songs share the slug "alpha". Neither owns the bare id and
+            # each gets a suffix from its own path, so a page that has not
+            # reloaded cannot delete the other one by that id.
+            self.assertNotIn("tracks/alpha", data)
+            alphas = {key: data[key]["title"] for key in data if key.startswith("tracks/alpha-")}
+            self.assertEqual(sorted(alphas.values()), ["Alpha", "Alpha Elsewhere"])
+            other = [key for key, title in alphas.items() if title == "Alpha Elsewhere"]
             self.assertNotIn("tracks/lonely", data)
             self.assertNotIn("tracks/extra", data)
             one = cf_data(root / "one")
@@ -315,6 +308,49 @@ class LibraryTests(unittest.TestCase):
             finally:
                 httpd.shutdown()
                 httpd.server_close()
+
+    def test_song_ids_do_not_move_when_a_same_named_song_appears(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "songs"
+            root.mkdir()
+            minimal_song(root / "my_song", "Mine", "C")
+            self.assertEqual({"my-song": root / "my_song"}, follower.song_index(root))
+            minimal_song(root / "My Song", "Theirs", "G")
+            later = follower.song_index(root)
+            self.assertNotIn("my-song", later)
+            self.assertIsNone(follower.find_song(root, "my-song"))
+            self.assertEqual({"Mine", "Theirs"}, {cf_data(root)["tracks/" + key]["title"] for key in later})
+
+    def test_a_broken_track_is_named_in_the_terminal(self):
+        import contextlib
+        import io
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "songs"
+            root.mkdir()
+            minimal_song(root / "alpha", "Alpha", "C")
+            broken = root / "broken"
+            broken.mkdir()
+            (broken / "track.json").write_text("{not json", encoding="utf-8")
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                data = cf_data(root)
+            self.assertIn("tracks/alpha", data)
+            self.assertNotIn("tracks/broken", data)
+            self.assertIn("skipped", out.getvalue())
+            self.assertIn("broken", out.getvalue())
+
+    def test_a_track_without_duration_still_gets_an_end_time(self):
+        # The page divides by duration for the scrub bar and stops at it, so a
+        # track that forgot the key must not reach the page as 0.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "songs"
+            root.mkdir()
+            minimal_song(root / "alpha", "Alpha", "C")
+            self.assertEqual(cf_data(root)["tracks/alpha"]["duration"], 2.0)
+            track = json.loads((root / "alpha" / "track.json").read_text(encoding="utf-8"))
+            track["sections"] = [{"name": "Intro", "start": 0, "end": 7.5}]
+            (root / "alpha" / "track.json").write_text(json.dumps(track), encoding="utf-8")
+            self.assertEqual(cf_data(root)["tracks/alpha"]["duration"], 7.5)
 
     def test_launcher_has_no_machine_path(self):
         text = (Path(__file__).resolve().parents[1] / "start-follower.bat").read_text(encoding="utf-8")
@@ -608,8 +644,62 @@ class CrossSiteTests(unittest.TestCase):
         self.assertEqual(415, self.send("/api/write", "POST", body, {"Content-Type": "text/plain"}))
         self.assertFalse((self.song / "picks.json").exists())
 
+    def test_a_cross_site_script_tag_cannot_read_the_library(self):
+        # <script src="http://127.0.0.1:PORT/data.js"> on another site sends
+        # the right Host and no Origin; only the browser's own label tells.
+        tag = {"Sec-Fetch-Site": "cross-site", "Sec-Fetch-Mode": "no-cors", "Sec-Fetch-Dest": "script"}
+        self.assertEqual(403, self.send("/data.js", headers=tag))
+        self.assertEqual(403, self.send("/data.js", headers=dict(tag, **{"Sec-Fetch-Site": "same-site"})))
+        self.assertEqual(403, self.send("/api/instruments", headers=tag))
+        self.assertEqual(403, self.send("/", headers={"Sec-Fetch-Site": "cross-site", "Sec-Fetch-Mode": "navigate", "Sec-Fetch-Dest": "iframe"}))
+        # The page's own script tag, a typed address, and a link from elsewhere still work.
+        self.assertEqual(200, self.send("/data.js", headers=dict(tag, **{"Sec-Fetch-Site": "same-origin"})))
+        self.assertEqual(200, self.send("/data.js", headers=dict(tag, **{"Sec-Fetch-Site": "none"})))
+        self.assertEqual(200, self.send("/", headers={"Sec-Fetch-Site": "cross-site", "Sec-Fetch-Mode": "navigate", "Sec-Fetch-Dest": "document"}))
+
     def test_rebound_host_is_refused(self):
         self.assertEqual(403, self.send("/data.js", headers={"Host": f"attacker.example:{self.port}"}))
+
+
+class ServerRobustnessTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name) / "songs"
+        self.root.mkdir()
+        minimal_song(self.root / "alpha", "Alpha", "C")
+        self.httpd = make_server(self.root, 0)
+        threading.Thread(target=self.httpd.serve_forever, daemon=True).start()
+        self.port = self.httpd.server_address[1]
+
+    def tearDown(self):
+        self.httpd.shutdown()
+        self.httpd.server_close()
+        self.tmp.cleanup()
+
+    def test_a_bad_content_length_is_a_400_not_a_traceback(self):
+        import http.client
+        conn = http.client.HTTPConnection("127.0.0.1", self.port, timeout=5)
+        conn.request("POST", "/api/write", body=None,
+                     headers={"Content-Type": "application/json", "Content-Length": "abc"})
+        res = conn.getresponse()
+        self.assertEqual(res.status, 400)
+        self.assertEqual(res.read(), b"bad body")
+        conn.close()
+
+    def test_a_locked_folder_reports_409_and_stays_listed(self):
+        def locked(path, *args, **kwargs):
+            raise PermissionError(13, "The process cannot access the file because it is being used by another process")
+
+        old = follower.shutil.rmtree
+        follower.shutil.rmtree = locked
+        try:
+            status, body = delete(self.port, "/api/tracks?id=alpha")
+        finally:
+            follower.shutil.rmtree = old
+        self.assertEqual(status, 409)
+        self.assertIn(b"could not delete", body)
+        self.assertTrue((self.root / "alpha" / "track.json").is_file())
+        self.assertIn("tracks/alpha", cf_data(self.root))
 
 
 class ViewerScriptTests(unittest.TestCase):
