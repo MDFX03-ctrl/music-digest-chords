@@ -59,13 +59,10 @@ button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--acc
 .grip::before{content:"";width:44px;height:4px;border-radius:2px;background:var(--line)}
 .grip:hover::before,.grip:focus-visible::before{background:var(--muted)}
 .lanesbtn{white-space:nowrap}
-.rmbar{display:inline-flex;gap:6px;align-items:center;font-size:13px;flex-wrap:wrap}
 button.danger{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
 .modal{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;padding:16px;background:color-mix(in srgb, var(--ink) 45%, transparent)}
 .modalcard{width:min(420px,100%);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;box-shadow:0 18px 50px -24px rgba(0,0,0,.55)}
 .modalcard p{margin:0}
-.rmrow{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:14px}
-.rmrow .t{min-width:0;flex:1 1 220px}
 .deck{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px;display:flex;flex-direction:column;gap:8px;box-shadow:0 6px 18px -12px rgba(0,0,0,.35)}
 .lcd{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:6px 16px;align-items:center}
 .btns{display:flex;gap:6px}
@@ -169,8 +166,6 @@ details.panel summary{cursor:pointer;font-weight:600;font-size:14px}
 .opt small{font-family:var(--mono);font-weight:400;font-size:11px;color:var(--muted)}
 .opt[aria-pressed="true"] small{color:inherit}
 .inctx{margin-top:6px;min-height:28px;padding:2px 9px;font-size:12px;align-self:flex-start}
-.choicehint{font-size:11px;color:var(--f-dom);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
-.card.choice.picked .choicehint{color:var(--muted)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
 .credit{margin-top:28px;padding:12px 0 8px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
 .credit a{color:inherit}
@@ -297,7 +292,7 @@ details.panel summary{cursor:pointer;font-weight:600;font-size:14px}
 
 <script src="data.js"></script>
 <script>
-/* Offline shim: a small database over data.js. On the local server, writes go to /api; opened from a folder, audio comes from audio/*.js. */
+/* A small database over data.js. On the local server, picks and row layouts are written back through /api. */
 (function(){
   var DATA = window.__CF_DATA || {}, LS = 'cf.offline.', subs = {}, collSubs = [];
   function tombKey(path){ return LS + 'tomb:' + path; }
@@ -366,29 +361,7 @@ details.panel summary{cursor:pointer;font-weight:600;font-size:14px}
   }
   var db = {collection: coll, doc: doc};
   window.claude = {use: function(n){ return Promise.resolve(n === 'db' ? db : null); }};
-  /* audio assets: "/_blob/<id>" is served from audio/<id>.js (base64), which works when opened straight from a folder */
   var realFetch = window.fetch ? window.fetch.bind(window) : null;
-  function loadAudio(id){ return new Promise(function(res, rej){
-    window.__CF_AUDIO = window.__CF_AUDIO || {};
-    if (window.__CF_AUDIO[id]) return res(window.__CF_AUDIO[id]);
-    var places = ['audio/'];
-    (function next(k){
-      if (k >= places.length) return rej(new Error('stem file missing'));
-      var s = document.createElement('script'); s.src = places[k] + id + '.js';
-      s.onload = function(){ window.__CF_AUDIO[id] ? res(window.__CF_AUDIO[id]) : next(k + 1); };
-      s.onerror = function(){ s.remove(); next(k + 1); };
-      document.head.appendChild(s);
-    })(0); }); }
-  window.fetch = function(url, opts){
-    var m = /\/_blob\/([0-9a-f]{32})/.exec(String(url && url.url || url));
-    if (!m) return realFetch ? realFetch(url, opts) : Promise.reject(new Error('offline'));
-    if ((location.protocol === 'http:' || location.protocol === 'https:') && realFetch) return realFetch(url, opts);
-    return loadAudio(m[1]).then(function(b64){
-      var bin = atob(b64), u = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
-      delete window.__CF_AUDIO[m[1]];   // free the text copy once decoded
-      return new Response(u, {status: 200, headers: {'content-type': 'audio/mp4', 'content-length': String(u.length)}});
-    });
-  };
 })();
 </script>
 <script>
