@@ -84,6 +84,16 @@ class ValidateTests(unittest.TestCase):
         _, errors = validate(raw, MEAS)
         self.assertTrue(any("alternative is not a candidate" in item for item in errors), errors)
 
+    def test_symbol_grammar(self):
+        from mdchord.validate import check_symbol
+        good = ["C", "Am", "F#m7b5", "Bbmaj7", "G7sus4", "Ddim7", "Eaug", "Cadd9", "Cm6", "C7#9",
+                "Fmaj7#11", "G13b9", "D/F#", "C6/A", "Ebm9", "N.C."]
+        bad = ["Cmm", "C7777", "Cmaj", "Csus", "C7b9b9", "Cm7m", "H", "C/H", "C?", " C", "Cxyz", "C69"]
+        for symbol in good:
+            self.assertTrue(check_symbol(symbol), symbol)
+        for symbol in bad:
+            self.assertFalse(check_symbol(symbol), symbol)
+
     def test_options_need_candidates_at_that_time(self):
         raw = chords_reply()
         raw["chords"][0].update(conf="low", options=[{"chord": "G"}, {"chord": "Gmaj7"}])

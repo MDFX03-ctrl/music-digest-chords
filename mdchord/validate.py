@@ -9,6 +9,12 @@ ROOT = Path(__file__).resolve().parents[1]
 CHORDTONES = ROOT / "tools" / "chordtones.js"
 PC = re.compile(r"^[A-G](#|b)?$")
 TIME_TOL = 0.05
+# Root, then in this order and each at most once: triad quality, a seventh or
+# extension, sus, add9, alterations. m7b5 is m + 7 + b5, dim7 is dim + 7.
+QUALITY = re.compile(
+    r"^[A-G][#b]?(m|min|dim|aug)?(maj7|maj9|maj11|maj13|6|7|9|11|13)?(sus2|sus4)?(add9)?"
+    r"(?P<alt>(b5|#5|b9|#9|#11|b13)*)$"
+)
 
 
 def extract_json(text):
@@ -117,23 +123,12 @@ def check_symbol(symbol):
     base, slash, bass = symbol.partition("/")
     if slash and not PC.match(bass):
         return False
-    root = PC.match(base[:1] + (base[1] if len(base) > 1 and base[1] in "#b" else ""))
-    if not root:
+    shape = QUALITY.match(base)
+    if not shape:
         return False
-    rest = base[root.end():]
-    # Strip the longest matching quality token each time. "m" is last so that
-    # m7, m7b5 and maj7 are seen whole; anything left over means the symbol
-    # carries a quality the spec does not list.
-    tokens = ("maj7", "m7b5", "dim7", "sus2", "sus4", "add9", "m7", "maj", "min", "dim", "aug",
-              "b13", "#11", "b5", "#5", "b9", "#9", "m", "6", "7", "9", "11", "13")
-    while rest:
-        for token in tokens:
-            if rest.startswith(token):
-                rest = rest[len(token):]
-                break
-        else:
-            return False
-    return True
+    # Each alteration at most once: "C7b9b9" is not a chord.
+    alterations = re.findall(r"b5|#5|b9|#9|#11|b13", shape.group("alt"))
+    return len(alterations) == len(set(alterations))
 
 
 def _check_symbol(name, known, label, errors):
