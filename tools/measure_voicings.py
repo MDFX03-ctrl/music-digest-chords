@@ -18,7 +18,7 @@ import json, subprocess, sys, os, itertools
 import numpy as np, librosa
 
 track, sdir, off, out = sys.argv[1], sys.argv[2], float(sys.argv[3]), sys.argv[4]
-T = json.load(open(track)); T = T.get('data', T)
+T = json.load(open(track, encoding='utf-8-sig')); T = T.get('data', T)
 chords = T['chords']
 here = os.path.dirname(os.path.abspath(__file__))
 ctjs = os.path.join(here, 'chordtones.js')

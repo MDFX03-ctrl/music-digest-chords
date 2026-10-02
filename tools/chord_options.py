@@ -18,7 +18,7 @@ if '--save' in args:
     at = args.index('--save'); save_to = args[at + 1]; del args[at:at + 2]
 track, sdir, off = args[0], args[1], float(args[2])
 idxs = [int(x) for x in args[3:]]
-T = json.load(open(track)); T = T.get('data', T); ch = T['chords']
+T = json.load(open(track, encoding='utf-8-sig')); T = T.get('data', T); ch = T['chords']
 here = os.path.dirname(os.path.abspath(__file__))
 ROOTS = ['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B']
 QUAL = ['', 'm', '7', 'maj7', 'm7', 'sus2', 'sus4', 'add9', '6', 'm7b5', 'dim']

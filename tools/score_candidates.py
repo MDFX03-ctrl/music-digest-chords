@@ -17,7 +17,7 @@ args = sys.argv[1:]
 save_to = None
 if '--save' in args:
     at = args.index('--save'); save_to = args[at + 1]; del args[at:at + 2]
-T = json.load(open(args[0])); T = T.get('data', T); ch = T['chords']
+T = json.load(open(args[0], encoding='utf-8-sig')); T = T.get('data', T); ch = T['chords']
 sdir, off, spec = args[1], float(args[2]), json.loads(args[3])
 here = os.path.dirname(os.path.abspath(__file__))
 syms = sorted({s for v in spec.values() for s in v})
