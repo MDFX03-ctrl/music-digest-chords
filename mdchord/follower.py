@@ -319,7 +319,27 @@ def build_handler(root):
     viewer = VIEWER.read_bytes()
 
     class Handler(BaseHTTPRequestHandler):
+        def _local(self):
+            """Only this page may talk to the server.
+
+            A Host other than 127.0.0.1 or localhost on this port is a DNS
+            rebinding attempt. An Origin from anywhere else is another site in
+            the same browser. Either one gets 403.
+            """
+            port = self.server.server_address[1]
+            allowed = {f"127.0.0.1:{port}", f"localhost:{port}"}
+            if (self.headers.get("Host") or "").lower() not in allowed:
+                self._bytes(403, "text/plain; charset=utf-8", b"forbidden host")
+                return False
+            origin = self.headers.get("Origin")
+            if origin is not None and origin.lower() not in {"http://" + item for item in allowed}:
+                self._bytes(403, "text/plain; charset=utf-8", b"forbidden origin")
+                return False
+            return True
+
         def do_GET(self):
+            if not self._local():
+                return
             path = urlparse(self.path).path
             if path in ("/", "/index.html"):
                 self._bytes(200, "text/html; charset=utf-8", viewer)
@@ -350,6 +370,14 @@ def build_handler(root):
             self._file(200, mime, target)
 
         def do_POST(self):
+            if not self._local():
+                return
+            # A cross-site form or text/plain fetch skips the CORS preflight.
+            # application/json does not, so it is the only type accepted.
+            kind = (self.headers.get("Content-Type") or "").split(";")[0].strip().lower()
+            if kind != "application/json":
+                self._bytes(415, "text/plain; charset=utf-8", b"send application/json")
+                return
             path = urlparse(self.path).path
             payload, error = self._payload()
             if error:
@@ -399,6 +427,8 @@ def build_handler(root):
             self._bytes(204, "text/plain", b"")
 
         def do_DELETE(self):
+            if not self._local():
+                return
             parsed = urlparse(self.path)
             if parsed.path == "/api/instruments":
                 ident = parse_qs(parsed.query).get("id", [""])[0]
@@ -419,9 +449,12 @@ def build_handler(root):
             if length <= 0 or length > 1_000_000:
                 return None, b"bad body"
             try:
-                return json.loads(self.rfile.read(length).decode("utf-8")), None
+                payload = json.loads(self.rfile.read(length).decode("utf-8"))
             except (UnicodeError, json.JSONDecodeError):
                 return None, b"bad json"
+            if not isinstance(payload, dict):
+                return None, b"bad json"
+            return payload, None
 
         def _bytes(self, status, mime, body):
             self.send_response(status)

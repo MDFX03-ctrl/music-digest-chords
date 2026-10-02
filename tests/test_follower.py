@@ -551,6 +551,54 @@ class ShippedInstrumentTests(unittest.TestCase):
         self.assertTrue(listed[0]["default"])
 
 
+class CrossSiteTests(unittest.TestCase):
+    """Another tab in the same browser must not reach the local server."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.song = Path(self.tmp.name) / "demo"
+        build_demo(self.song)
+        self.httpd = make_server(self.song, 0)
+        threading.Thread(target=self.httpd.serve_forever, daemon=True).start()
+        self.port = self.httpd.server_address[1]
+
+    def tearDown(self):
+        self.httpd.shutdown()
+        self.httpd.server_close()
+        self.tmp.cleanup()
+
+    def send(self, path, method="GET", body=None, headers=None):
+        req = urllib.request.Request(f"http://127.0.0.1:{self.port}{path}", data=body,
+                                     headers=headers or {}, method=method)
+        try:
+            with urllib.request.urlopen(req) as res:
+                return res.status
+        except urllib.error.HTTPError as exc:
+            return exc.code
+
+    def test_page_requests_still_work(self):
+        same = {"Origin": f"http://127.0.0.1:{self.port}", "Content-Type": "application/json"}
+        body = json.dumps({"path": "picks/demo", "data": {"picks": {}}}).encode("utf-8")
+        self.assertEqual(204, self.send("/api/write", "POST", body, same))
+        self.assertEqual(200, self.send("/data.js", headers={"Host": f"localhost:{self.port}"}))
+
+    def test_foreign_origin_is_refused(self):
+        body = json.dumps({"path": "picks/demo", "data": {"x": 1}}).encode("utf-8")
+        headers = {"Origin": "https://evil.example", "Content-Type": "application/json"}
+        self.assertEqual(403, self.send("/api/write", "POST", body, headers))
+        self.assertEqual(403, self.send("/api/tracks?id=demo", "DELETE", headers={"Origin": "https://evil.example"}))
+        self.assertFalse((self.song / "picks.json").exists())
+        self.assertTrue((self.song / "track.json").is_file())
+
+    def test_simple_cross_site_post_is_refused(self):
+        body = json.dumps({"path": "picks/demo", "data": {"x": 1}}).encode("utf-8")
+        self.assertEqual(415, self.send("/api/write", "POST", body, {"Content-Type": "text/plain"}))
+        self.assertFalse((self.song / "picks.json").exists())
+
+    def test_rebound_host_is_refused(self):
+        self.assertEqual(403, self.send("/data.js", headers={"Host": f"attacker.example:{self.port}"}))
+
+
 class ViewerScriptTests(unittest.TestCase):
     def test_inline_scripts_parse(self):
         html = VIEWER.read_text(encoding="utf-8")
