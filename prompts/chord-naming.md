@@ -28,6 +28,7 @@ Read these from the song folder. `measurement.json` bundles them exactly as writ
 | `chart_verbatim` | `true` only when the tool guarantees the chart was copied token by token. Otherwise treat the chart as missing. |
 | `candidates` | Optional object keyed by part time (as a string). Each value is the chord list scored by `tools/chord_options.py` or `tools/score_candidates.py` and saved with `--save`: `{chord, score, bass_ok}`. |
 | `duration` | Seconds. |
+| `title`, `artist` | From `digest --title` and `--artist`. Copy them into `track.json`. They are not evidence. |
 
 Pitch-class names use ASCII `b` and `#` (`Bb`, `F#`). `bars.key` is a Krumhansl guess, not a verdict. A stem with `share` under 0.05 is bleed: do not use it as the sole evidence for a chord or a section change.
 

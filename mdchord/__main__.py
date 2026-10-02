@@ -96,7 +96,7 @@ def main(argv=None):
 
     run = sub.add_parser("digest", help="Measure a song locally. This does not name chords and never calls a model")
     run.add_argument("audio")
-    run.add_argument("--chart", help="Verbatim chord tokens, one chart, not a summary")
+    run.add_argument("--chart", help="Path to a UTF-8 text file holding one verbatim chart: chord tokens in order, not a summary")
     run.add_argument("--out", required=True, help="Song folder for stems and the measurement")
     run.add_argument("--title", default=None)
     run.add_argument("--artist", default="")

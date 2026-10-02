@@ -38,9 +38,15 @@ def digest(
 ):
     audio = Path(audio)
     dest = Path(out)
-    dest.mkdir(parents=True, exist_ok=True)
     if not audio.is_file():
         raise DigestError([f"audio file not found: {audio}"])
+    chart_text = ""
+    if chart:
+        try:
+            chart_text = Path(chart).read_text(encoding="utf-8-sig")
+        except OSError as exc:
+            raise DigestError([f"chart file not readable: {chart} ({exc.strerror or exc})"]) from exc
+    dest.mkdir(parents=True, exist_ok=True)
 
     tool = engine or Engine()
     stems = dest / "stems"
@@ -56,7 +62,10 @@ def digest(
     tool.bars(stems, mix, grid["bpm"], start, dest / "bars.json", beats, split, ())
     bars = load_json(dest / "bars.json")
     duration = float(grid.get("duration") or 0)
-    packet = measurement(manifest, grid, bars, Path(chart).read_text(encoding="utf-8") if chart else "", duration)
+    packet = measurement(manifest, grid, bars, chart_text, duration)
+    # Kept so track.json can copy them; check does not read them.
+    packet["title"] = title or audio.stem
+    packet["artist"] = artist
     _write(dest / "measurement.json", packet)
     # track.json is written by hand from this packet, then checked with
     # "python -m mdchord check". Nothing here names a chord.

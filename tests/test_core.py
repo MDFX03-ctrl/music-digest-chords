@@ -262,6 +262,30 @@ class PipelineTests(unittest.TestCase):
             with self.assertRaises(DigestError):
                 digest(root / "nope.wav", root / "out", engine=engine)
             self.assertEqual(engine.stem_calls, 0)
+            self.assertFalse((root / "out").exists())
+
+    def test_a_missing_chart_file_is_refused_before_stems(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            audio = root / "song.wav"
+            audio.write_bytes(b"audio")
+            engine = FakeEngine()
+            with self.assertRaises(DigestError):
+                digest(audio, root / "out", chart="C G Am F", engine=engine)
+            self.assertEqual(engine.stem_calls, 0)
+
+    def test_chart_title_and_artist_reach_the_measurement(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            audio = root / "song.wav"
+            audio.write_bytes(b"audio")
+            chart = root / "chart.txt"
+            chart.write_text("G A Bm\n", encoding="utf-8-sig")
+            digest(audio, root / "out", chart=str(chart), title="星", artist="A", engine=FakeEngine())
+            measured = json.loads((root / "out" / "measurement.json").read_text(encoding="utf-8"))
+        self.assertEqual("G A Bm", measured["chart"])
+        self.assertTrue(measured["chart_verbatim"])
+        self.assertEqual(("星", "A"), (measured["title"], measured["artist"]))
 
     def test_demo_runs_without_a_model(self):
         with tempfile.TemporaryDirectory() as tmp:
