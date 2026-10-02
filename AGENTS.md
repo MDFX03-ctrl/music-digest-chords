@@ -28,7 +28,7 @@ python -m mdchord doctor
 
 `requirements.txt` is only numpy, soundfile, librosa, and pedalboard. `torch` and `demucs` stay out of that file.
 
-`doctor` must show `ffmpeg` and `node` found, and numpy, soundfile, librosa, demucs, pedalboard importable. `MDCHORD_API_KEY` stays unused.
+`doctor` must show `ffmpeg` and `node` found, and numpy, soundfile, librosa, demucs, pedalboard importable. There is no API key to set. This pack never calls a model endpoint, and no code path can.
 
 ## Listen to the demo
 
@@ -56,10 +56,10 @@ On the page, the only song control is Remove. It asks once, then deletes that so
 ## One song the user may use
 
 ```
-python -m mdchord digest "AUDIO" --measure-only --out songs/FOLDER --title "TITLE" --artist "ARTIST"
+python -m mdchord digest "AUDIO" --out songs/FOLDER --title "TITLE" --artist "ARTIST"
 ```
 
-`--measure-only` writes `stems/*.wav`, `input.wav`, `manifest.json`, `grid.json`, `bars.json`, and `measurement.json`. It does not name chords. The first run of Demucs is the slow step.
+It writes `stems/*.wav`, `input.wav`, `manifest.json`, `grid.json`, `bars.json`, and `measurement.json`. It does not name chords, and it cannot: `digest` only measures. The first run of Demucs is the slow step.
 
 Then:
 
@@ -79,7 +79,13 @@ python tools/score_candidates.py songs/FOLDER/track.json songs/FOLDER/stems 0 "{
 python tools/measure_voicings.py songs/FOLDER/track.json songs/FOLDER/stems 0 songs/FOLDER/voicings.json
 ```
 
-6. Write `analysis.md` in that folder. Say there is no ear check yet.
+6. Validate what you wrote. Fix every reported problem before handing the song over.
+
+```
+python -m mdchord check songs/FOLDER
+```
+
+7. Write `analysis.md` in that folder. Say there is no ear check yet.
 
 ```
 python -m mdchord serve
@@ -87,7 +93,7 @@ python -m mdchord serve
 
 `serve` with no path opens every song in `songs/`, plus folders named in `songs/libraries.txt`. On Windows, `start-follower.bat` does that and opens the browser. Give the user the command and the URL. When stems exist, Full mix starts muted. Do not claim you clicked Play.
 
-Do not run `digest` without `--measure-only`. That older path calls an API and will not start when the key is missing.
+There is no API path and no `--measure-only` flag: measuring is all `digest` does.
 
 ## Do not ship or commit
 

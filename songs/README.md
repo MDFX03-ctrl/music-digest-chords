@@ -3,8 +3,10 @@
 One folder per song. A new digest goes here:
 
 ```
-python -m mdchord digest "AUDIO" --measure-only --out songs/FOLDER --title "TITLE" --artist "ARTIST"
+python -m mdchord digest "AUDIO" --out songs/FOLDER --title "TITLE" --artist "ARTIST"
 ```
+
+That measures the song and writes no chord names. You name them into `track.json` following `prompts/chord-naming.md`, then run `python -m mdchord check songs/FOLDER` to validate it.
 
 Pick an ASCII folder name. The page lists it once that folder has `track.json`. `python -m mdchord demo` writes `songs/demo`.
 

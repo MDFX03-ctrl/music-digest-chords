@@ -4,7 +4,9 @@ import json
 
 
 def load_json(path):
-    with open(path, encoding="utf-8") as f:
+    # utf-8-sig so a track.json saved by an editor that writes a BOM (Notepad
+    # on Windows does) still parses instead of failing on char 0.
+    with open(path, encoding="utf-8-sig") as f:
         return json.load(f)
 
 
@@ -19,23 +21,3 @@ def measurement(manifest, grid, bars, chart, duration, candidates=None):
         "candidates": candidates,
         "duration": duration,
     }
-
-
-def remeasure_plan(spec, start, split):
-    """Return (start, split, short args) or None when the request changes nothing."""
-    if not isinstance(spec, dict):
-        return None
-    new_start = spec.get("bar_start")
-    new_split = spec.get("split")
-    shorts = []
-    for row in spec.get("short_bars") or []:
-        shorts.append(f"{int(row['bar'])}:{int(row['beats'])}")
-    start2 = float(start if new_start is None else new_start)
-    split2 = int(split if new_split is None else new_split)
-    if abs(start2 - float(start)) <= 1e-3 and split2 == int(split) and not shorts:
-        return None
-    if not 1 <= split2 <= 8:
-        raise ValueError(f"split {split2} is outside 1..8")
-    if start2 < 0:
-        raise ValueError("bar_start is negative")
-    return start2, split2, shorts

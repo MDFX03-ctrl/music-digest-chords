@@ -6,11 +6,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from mdchord.config import Config
-from mdchord.options import attach_options
-from mdchord.packet import remeasure_plan
+from mdchord.__main__ import main
 from mdchord.pipeline import DigestError, digest
-from mdchord.reason import messages
 from mdchord.validate import extract_json, validate
 
 BARS = {
@@ -107,27 +104,78 @@ class ValidateTests(unittest.TestCase):
         self.assertEqual(errors, [], errors)
 
 
-class OptionTests(unittest.TestCase):
-    def test_options_come_from_scores(self):
-        chords = [{"chord": "A", "roman": "V", "conf": "low", "options": None}]
-        attach_options(chords, {"0": {"candidates": [
-            {"chord": "A", "score": 0.4, "bass_ok": True},
-            {"chord": "A7sus4", "score": 0.8, "bass_ok": True},
-            {"chord": "D", "score": 0.9, "bass_ok": False},
-        ]}})
-        self.assertEqual([item["chord"] for item in chords[0]["options"]], ["A", "A7sus4"])
+class CheckTests(unittest.TestCase):
+    """The check command is how a hand-written track.json is verified."""
 
-    def test_empty_remeasure_plan(self):
-        self.assertIsNone(remeasure_plan({"bar_start": 0.5, "reason": "x"}, 0.5, 2))
-        self.assertEqual(remeasure_plan({"bar_start": 2.1, "short_bars": [{"bar": 21, "beats": 2}]}, 0.5, 2)[2], ["21:2"])
+    def _song(self, root, track, measurement=None):
+        song = root / "song"
+        song.mkdir()
+        (song / "track.json").write_text(json.dumps(track), encoding="utf-8")
+        if measurement is not None:
+            (song / "measurement.json").write_text(json.dumps(measurement), encoding="utf-8")
+        return song
 
+    def test_a_spec_shaped_track_passes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            song = self._song(Path(tmp), chords_reply(), MEAS)
+            self.assertEqual(main(["check", str(song)]), 0)
 
-class MessageTests(unittest.TestCase):
-    def test_repair_wrapper_is_data(self):
-        packet = {"chart": "G"}
-        wrapped = json.loads(messages("rules", packet, ["bpm does not match"])[1]["content"])
-        self.assertEqual(wrapped["validation_errors"], ["bpm does not match"])
-        self.assertEqual(wrapped["measurement"]["chart"], "G")
+    def test_an_unparseable_chord_symbol_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            track = chords_reply()
+            track["chords"][0]["chord"] = "G??? "
+            song = self._song(Path(tmp), track, MEAS)
+            self.assertEqual(main(["check", str(song)]), 1)
+
+    def test_a_measured_chord_cannot_be_ok(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            track = chords_reply()
+            track["chords"][1].update({"conf": "ok", "source": "measured"})
+            song = self._song(Path(tmp), track, MEAS)
+            self.assertEqual(main(["check", str(song)]), 1)
+
+    def test_check_without_measurement_still_reads_the_track(self):
+        # No measurement.json: times and bpm are not cross-checked, but the
+        # rules that need no grid (symbols, conf/source pairing) still apply.
+        with tempfile.TemporaryDirectory() as tmp:
+            track = {
+                "status": "chords", "key": "C major", "bpm": 120, "bar_start": 0,
+                "beats_per_bar": 4, "chart_used": False,
+                "sections": [{"name": "Intro", "start": 0, "end": 4}],
+                "duration": 4,
+                "chords": [{"t": 0, "chord": "C", "roman": "I", "conf": "low", "source": "measured",
+                            "why": "Bass C, no chart."}],
+                "remeasure": None, "bleed_stems": [], "notes": [],
+            }
+            song = self._song(Path(tmp), track)
+            self.assertEqual(main(["check", str(song)]), 0)
+
+            track["chords"][0]["chord"] = "C//G"
+            (song / "track.json").write_text(json.dumps(track), encoding="utf-8")
+            self.assertEqual(main(["check", str(song)]), 1)
+
+    def test_missing_track_reports_a_problem(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            empty = Path(tmp) / "empty"
+            empty.mkdir()
+            self.assertEqual(main(["check", str(empty)]), 1)
+
+    def test_a_track_saved_with_a_bom_still_parses(self):
+        # Notepad on Windows writes a UTF-8 BOM. A song folder must not fail
+        # with "Unexpected UTF-8 BOM" because of how the file was saved.
+        with tempfile.TemporaryDirectory() as tmp:
+            song = Path(tmp) / "song"
+            song.mkdir()
+            body = json.dumps(chords_reply())
+            (song / "measurement.json").write_text(json.dumps(MEAS), encoding="utf-8")
+            (song / "track.json").write_text(body, encoding="utf-8-sig")
+            self.assertTrue((song / "track.json").read_bytes().startswith(b"\xef\xbb\xbf"))
+            self.assertEqual(main(["check", str(song)]), 0)
+
+            # And a bad symbol is still caught, not excused by the BOM.
+            (song / "track.json").write_text(
+                body.replace('"chord": "G"', '"chord": "G??"'), encoding="utf-8-sig")
+            self.assertEqual(main(["check", str(song)]), 1)
 
 
 class FakeEngine:
@@ -152,73 +200,44 @@ class FakeEngine:
         self.starts.append((float(start), int(split), tuple(shorts)))
         Path(dest).write_text(json.dumps(BARS), encoding="utf-8")
 
-    def options(self, track, stems, offset, indexes):
-        raise AssertionError("options are not scored when every chord is ok")
-
-    def voicings(self, track, stems, offset, dest):
-        Path(dest).write_text(json.dumps({"voicings": []}), encoding="utf-8")
-
 
 class PipelineTests(unittest.TestCase):
-    def test_measure_only_does_not_call_the_model(self):
+    def test_digest_writes_the_measurement_and_no_track(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             audio = root / "song.wav"
             audio.write_bytes(b"audio")
             engine = FakeEngine()
-
-            def explode(*_args, **_kwargs):
-                raise AssertionError("model was called")
-
-            summary = digest(audio, root / "out", measure_only=True, engine=engine, complete_fn=explode)
+            summary = digest(audio, root / "out", engine=engine)
             self.assertEqual(summary["status"], "measured")
-            self.assertTrue((root / "out" / "measurement.json").is_file())
+            out = root / "out"
+            self.assertTrue((out / "measurement.json").is_file())
+            self.assertTrue((out / "grid.json").is_file())
+            self.assertTrue((out / "bars.json").is_file())
             self.assertEqual(engine.stem_calls, 1)
+            # Naming is the caller's job now, so digest must not invent a track.
+            self.assertFalse((out / "track.json").exists())
 
-    def test_remeasure_then_chords(self):
+    def test_digest_uses_the_grid_phase_for_the_downbeat(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             audio = root / "song.wav"
             audio.write_bytes(b"audio")
-            chart = root / "chart.txt"
-            chart.write_text("G\nA\nBm\n", encoding="utf-8")
             engine = FakeEngine()
-            calls = {"n": 0}
-
-            def complete(measurement, config, errors=None, agents=None, opener=None):
-                calls["n"] += 1
-                if calls["n"] == 1:
-                    return json.dumps({
-                        "status": "needs_remeasure", "chords": [], "sections": [],
-                        "remeasure": {"bar_start": 2.1, "short_bars": [{"bar": 2, "beats": 2}],
-                                      "reason": "The pattern starts on the next bass note, after a drum fill."},
-                    })
-                self.assertIsNone(errors)
-                return json.dumps(chords_reply())
-
-            summary = digest(
-                audio, root / "out", chart=chart, title="Song", artist="A",
-                config=Config("http://example/v1", "key", "model"),
-                engine=engine, complete_fn=complete,
-            )
-            self.assertEqual(summary["status"], "chords")
-            self.assertEqual(summary["chords"], 2)
+            digest(audio, root / "out", engine=engine)
             self.assertEqual(engine.starts[0][0], 0.5)
-            self.assertEqual(engine.starts[1][0], 2.1)
-            self.assertEqual(engine.starts[1][2], ("2:2",))
-            track = json.loads((root / "out" / "track.json").read_text(encoding="utf-8"))
-            self.assertEqual(track["chords"][0]["chord"], "G")
-            self.assertIn("⏳", (root / "out" / "analysis.md").read_text(encoding="utf-8"))
 
-    def test_missing_api_does_not_start_stems(self):
+    def test_a_missing_audio_file_is_refused_before_stems(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            audio = root / "song.wav"
-            audio.write_bytes(b"audio")
             engine = FakeEngine()
             with self.assertRaises(DigestError):
-                digest(audio, root / "out", engine=engine, config=Config("http://example/v1", "", ""))
+                digest(root / "nope.wav", root / "out", engine=engine)
             self.assertEqual(engine.stem_calls, 0)
+
+    def test_demo_runs_without_a_model(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertEqual(main(["demo", "--out", str(Path(tmp) / "d")]), 0)
 
 
 if __name__ == "__main__":

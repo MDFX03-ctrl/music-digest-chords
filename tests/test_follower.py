@@ -16,6 +16,7 @@ import mdchord.follower as follower
 import mdchord.vst as vst
 from mdchord.demo import build as build_demo
 from mdchord.follower import VIEWER, cf_data, make_server
+from mdchord.validate import validate
 
 
 def wav(path):
@@ -46,6 +47,7 @@ PATH_SCAN_MIN_CHARS = 6
 PATH_SCAN_TREES = ("mdchord", "tools", "tests", "viewer", "prompts")
 PATH_SCAN_SKIP_NAMES = {"test_core.py", "test_follower.py"}
 PATH_SCAN_FILES = (
+    ".gitattributes",
     ".gitignore",
     "README.md",
     "AGENTS.md",
@@ -54,10 +56,9 @@ PATH_SCAN_FILES = (
     "pyproject.toml",
     "requirements.txt",
     "start-follower.bat",
-    ".env.example",
     "songs/README.md",
 )
-PATH_SCAN_SUFFIXES = (".md", ".py", ".js", ".bat", ".toml", ".txt", ".html", ".json", ".example", ".gitignore")
+PATH_SCAN_SUFFIXES = (".md", ".py", ".js", ".bat", ".toml", ".txt", ".html", ".json", ".example", ".gitignore", ".gitattributes")
 PATH_SCAN_LIMIT = 1_000_000
 
 
@@ -324,6 +325,10 @@ class LibraryTests(unittest.TestCase):
 
     def test_no_shipped_file_has_a_machine_path(self):
         root = Path(__file__).resolve().parents[1]
+        # A stale entry here would silently stop scanning a real file, so the
+        # list has to name files that exist.
+        for name in PATH_SCAN_FILES:
+            self.assertTrue((root / name).is_file(), f"PATH_SCAN_FILES names a missing file: {name}")
         self.assertEqual([], machine_path_hits(root))
 
     def test_the_path_scan_fires_on_a_planted_path(self):
@@ -380,8 +385,12 @@ class DemoTests(unittest.TestCase):
                 self.assertTrue(body.startswith(b"RIFF"), name)
             track = json.loads((out / "track.json").read_text(encoding="utf-8"))
             self.assertEqual([c["chord"] for c in track["chords"]], ["C", "G", "Am", "F"])
-            self.assertEqual(track["chords"][1]["options"][1]["chord"], "G7")
             self.assertIn("Original 8 second loop", " ".join(track["notes"]))
+            # The demo must satisfy the naming spec it ships, or the first
+            # command a new user tries would fail.
+            self.assertTrue((out / "measurement.json").is_file())
+            _, errors = validate(track, json.loads((out / "measurement.json").read_text(encoding="utf-8")))
+            self.assertEqual([], errors)
 
 
 class InstrumentTests(unittest.TestCase):

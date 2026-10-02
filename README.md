@@ -28,7 +28,7 @@ pip install -r requirements.txt demucs
 python -m mdchord doctor
 ```
 
-`requirements.txt` is only numpy, soundfile, librosa, and pedalboard. `doctor` must show `ffmpeg` and `node` found, and all four packages plus demucs importable. `MDCHORD_API_KEY` stays empty.
+`requirements.txt` is only numpy, soundfile, librosa, and pedalboard. `doctor` must show `ffmpeg` and `node` found, and all four packages plus demucs importable. There is no API key to set: this pack never calls a model endpoint.
 
 ## Listen to the demo first
 
@@ -54,10 +54,10 @@ On the page the only song control is Remove. It asks once, then deletes that son
 ## Analyse a song you have the right to use
 
 ```
-python -m mdchord digest "AUDIO" --measure-only --out songs\FOLDER --title "TITLE" --artist "ARTIST"
+python -m mdchord digest "AUDIO" --out songs\FOLDER --title "TITLE" --artist "ARTIST"
 ```
 
-This step writes only `stems`, `input.wav`, `manifest.json`, `grid.json`, `bars.json`, and `measurement.json`. It does not name chords. The first run of Demucs is the slow step.
+This step writes only `stems`, `input.wav`, `manifest.json`, `grid.json`, `bars.json`, and `measurement.json`. It does not name chords, and it cannot: `digest` only measures. The first run of Demucs is the slow step.
 
 Then, in this order:
 
@@ -71,10 +71,16 @@ python tools/chord_options.py songs\FOLDER\track.json songs\FOLDER\stems 0 INDEX
 python tools/measure_voicings.py songs\FOLDER\track.json songs\FOLDER\stems 0 songs\FOLDER\voicings.json
 ```
 
-5. Write `analysis.md` in that folder and say there is no ear check yet.
-6. `python -m mdchord serve` opens every finished song under `songs\`. Give the user the command and the URL. When stems exist, Full mix starts muted.
+5. Validate what you wrote, and fix everything it reports:
 
-Do not run `digest` without `--measure-only`. That older path calls an API and will refuse to start when the key is missing.
+```
+python -m mdchord check songs\FOLDER
+```
+
+6. Write `analysis.md` in that folder and say there is no ear check yet.
+7. `python -m mdchord serve` opens every finished song under `songs\`. Give the user the command and the URL. When stems exist, Full mix starts muted.
+
+There is no API path and no `--measure-only` flag. Measuring is all `digest` does, so the command above is the only form it has.
 
 Do not search the web for a chart of the user's own song.
 

@@ -52,6 +52,7 @@ def build(out):
     _write(out / "stems" / "drums.wav", drums)
     _write(out / "stems" / "bass.wav", bass)
     _write(out / "input.wav", mix)
+    chart = "C G Am F"
     track = {
         "title": "Demo loop",
         "artist": "music-digest-chord",
@@ -65,17 +66,48 @@ def build(out):
         "duration": seconds,
         "status": "chords",
         "verified": False,
+        "chart_used": True,
         "sections": [{"name": "Intro", "start": 0, "end": seconds}],
         "chords": [
-            {"t": 0, "chord": "C", "roman": "I", "conf": "ok", "source": "chart"},
-            {"t": 2, "chord": "G", "roman": "V", "conf": "low", "source": "chart",
-             "options": [{"chord": "G", "roman": "V"}, {"chord": "G7", "roman": "V7"}]},
-            {"t": 4, "chord": "Am", "roman": "vi", "conf": "ok", "source": "chart"},
-            {"t": 6, "chord": "F", "roman": "IV", "conf": "ok", "source": "chart"},
+            {"t": 0, "chord": "C", "roman": "I", "conf": "ok", "source": "chart",
+             "why": "Loop opens on the tonic; written chart C G Am F starts here."},
+            {"t": 2, "chord": "G", "roman": "V", "conf": "ok", "source": "chart",
+             "why": "Second token of the written chart, a fifth above the tonic."},
+            {"t": 4, "chord": "Am", "roman": "vi", "conf": "ok", "source": "chart",
+             "why": "Third token of the written chart, the relative minor."},
+            {"t": 6, "chord": "F", "roman": "IV", "conf": "ok", "source": "chart",
+             "why": "Fourth token of the written chart, the subdominant, then it repeats."},
         ],
         "notes": ["Original 8 second loop for trying the page and a VST3. Not a commercial recording."],
+        "remeasure": None,
+        "bleed_stems": [],
     }
     (out / "track.json").write_text(json.dumps(track, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    # The demo knows its own chords, so it ships the chart and grid it was named
+    # from. Without this the track would claim a chart nobody supplied, and
+    # "python -m mdchord check" would rightly reject it.
+    measurement = {
+        "manifest": {
+            "source": "demo",
+            "model": "none",
+            "stems": [{"kind": kind, "share": 0.5, "rms_db": -18.0, "duration": seconds}
+                      for kind in ("drums", "bass")],
+        },
+        "grid": {"bpm": 120.0, "beat_phase": 0.0, "period": 0.5, "duration": seconds,
+                 "windows": [], "change_counts": [4, 0, 0, 0]},
+        "bars": {"key": "C major", "tuning_cents": 0.0, "bpm": 120.0, "start": 0.0, "bars": [
+            {"bar": index + 1, "t": index * 2.0, "beats": 4, "mix": -18.0, "vox": -120.0,
+             "drums": -18.0, "bassdb": -18.0,
+             "parts": [{"t": index * 2.0, "bass": name,
+                        "low": name, "chroma": []}]}
+            for index, name in enumerate(("C", "G", "A", "F"))
+        ]},
+        "chart": chart,
+        "chart_verbatim": True,
+        "candidates": None,
+        "duration": seconds,
+    }
+    (out / "measurement.json").write_text(json.dumps(measurement, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     (out / "analysis.md").write_text(
         "# Demo loop\n\n**Status:** ⏳ for trying the player.\n\n"
         "### 2. Chord map\n\n| Section | Chords |\n|---|---|\n| Intro | C G Am F |\n",

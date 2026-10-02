@@ -69,10 +69,60 @@ def _usual_beats(bars):
     return max(counts, key=counts.get) if counts else 4
 
 
+class ValidateError(RuntimeError):
+    """Raised when a hand-written track.json does not follow the naming spec."""
+
+    def __init__(self, errors):
+        super().__init__("\n".join(errors))
+        self.errors = list(errors)
+
+
+class ValidateError(RuntimeError):
+    """Raised when a hand-written track.json does not follow the naming spec."""
+
+    def __init__(self, errors):
+        super().__init__("\n".join(errors))
+        self.errors = list(errors)
+
+
+def check_symbol(symbol):
+    """True when the symbol matches the grammar in prompts/chord-naming.md.
+
+    tools/chordtones.js is deliberately forgiving: it strips "?" and whitespace
+    and falls back to a major triad, so it cannot tell "G" from "G???" or
+    "Gxyz". The spec allows neither, so the shape is checked here instead of
+    handing chordtones.js more than it can decide.
+    """
+    if symbol == "N.C.":
+        return True
+    if not isinstance(symbol, str) or symbol != symbol.strip():
+        return False
+    base, slash, bass = symbol.partition("/")
+    if slash and not PC.match(bass):
+        return False
+    root = PC.match(base[:1] + (base[1] if len(base) > 1 and base[1] in "#b" else ""))
+    if not root:
+        return False
+    rest = base[root.end():]
+    # Strip the longest matching quality token each time. "m" is last so that
+    # m7, m7b5 and maj7 are seen whole; anything left over means the symbol
+    # carries a quality the spec does not list.
+    tokens = ("maj7", "m7b5", "dim7", "sus2", "sus4", "add9", "m7", "maj", "min", "dim", "aug",
+              "b13", "#11", "b5", "#5", "b9", "#9", "m", "6", "7", "9", "11", "13")
+    while rest:
+        for token in tokens:
+            if rest.startswith(token):
+                rest = rest[len(token):]
+                break
+        else:
+            return False
+    return True
+
+
 def _check_symbol(name, known, label, errors):
     if name == "N.C.":
         return
-    if not isinstance(name, str) or not known.get(name):
+    if not isinstance(name, str) or not known.get(name) or not check_symbol(name):
         errors.append(f"{label} is not a parseable chord symbol")
 
 
