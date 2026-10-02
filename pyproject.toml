@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mdchord"
+version = "0.1.0"
+description = "Local chord toolbox for a music producer. Measures audio on this machine. No API."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "numpy>=1.26",
+  "soundfile>=0.12",
+  "librosa>=0.10",
+  "pedalboard>=0.9",
+]
+
+[project.scripts]
+mdchord = "mdchord.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["mdchord*"]

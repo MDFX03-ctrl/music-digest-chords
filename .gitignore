@@ -1,0 +1,20 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.env
+songs/*
+!songs/README.md
+work/
+instruments.json
+*.wav
+*.mp3
+*.mp4
+*.flac
+*.m4a
+!instruments/salamander.m4a
+backup/
+# Aurora Grand links JUCE (GPLv3 or commercial) and is not redistributed here.
+# Only the two Salamander files ship from instruments/.
+instruments/*
+!instruments/salamander.json
+!instruments/salamander.m4a

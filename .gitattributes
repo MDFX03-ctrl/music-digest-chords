@@ -1,0 +1,7 @@
+# Normalise line endings in the repository, whatever the checkout platform.
+# The Python tools and the docs are LF everywhere. The Windows launcher keeps
+# CRLF so it still runs from a double-click.
+* text=auto eol=lf
+*.bat text eol=crlf
+*.m4a binary
+*.png binary

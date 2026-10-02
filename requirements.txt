@@ -1,0 +1,8 @@
+# Listening, beat grid, chroma, and VST3 playback.
+# Stem separation is not in this file. From the project directory:
+#   pip install torch torchaudio --index-url https://download.pytorch.org/whl/cpu
+#   pip install demucs
+numpy>=1.26
+soundfile>=0.12
+librosa>=0.10
+pedalboard>=0.9

@@ -1,0 +1,194 @@
+{
+  "asset": "20ebac42e1a687e0ad14d68d477c1e0d",
+  "author": "Alexander Holm",
+  "created": "2026-09-29T10:15:00Z",
+  "instrument": "Yamaha C5 grand (acoustic piano)",
+  "layout": "one sample every minor third (A0 to C8); pitch-shift to the nearest sample (max ±1 semitone). Each slot: start = attack time in the file, dur = usable length (last 0.5 s faded out).",
+  "license": "CC BY 3.0 (credit: Salamander Grand Piano by Alexander Holm)",
+  "name": "Salamander Grand Piano",
+  "samples": [
+    {
+      "dur": 5.84,
+      "midi": 21,
+      "name": "A0",
+      "start": 0.1092
+    },
+    {
+      "dur": 5.84,
+      "midi": 24,
+      "name": "C1",
+      "start": 6.125
+    },
+    {
+      "dur": 5.84,
+      "midi": 27,
+      "name": "D#1",
+      "start": 12.1132
+    },
+    {
+      "dur": 5.84,
+      "midi": 30,
+      "name": "F#1",
+      "start": 18.1166
+    },
+    {
+      "dur": 5.84,
+      "midi": 33,
+      "name": "A1",
+      "start": 24.1045
+    },
+    {
+      "dur": 5.84,
+      "midi": 36,
+      "name": "C2",
+      "start": 30.107
+    },
+    {
+      "dur": 5.84,
+      "midi": 39,
+      "name": "D#2",
+      "start": 36.1084
+    },
+    {
+      "dur": 5.84,
+      "midi": 42,
+      "name": "F#2",
+      "start": 42.1051
+    },
+    {
+      "dur": 5.84,
+      "midi": 45,
+      "name": "A2",
+      "start": 48.1112
+    },
+    {
+      "dur": 5.84,
+      "midi": 48,
+      "name": "C3",
+      "start": 54.1111
+    },
+    {
+      "dur": 5.84,
+      "midi": 51,
+      "name": "D#3",
+      "start": 60.1122
+    },
+    {
+      "dur": 5.84,
+      "midi": 54,
+      "name": "F#3",
+      "start": 66.1116
+    },
+    {
+      "dur": 5.84,
+      "midi": 57,
+      "name": "A3",
+      "start": 72.1112
+    },
+    {
+      "dur": 5.84,
+      "midi": 60,
+      "name": "C4",
+      "start": 78.1115
+    },
+    {
+      "dur": 5.84,
+      "midi": 63,
+      "name": "D#4",
+      "start": 84.1111
+    },
+    {
+      "dur": 5.84,
+      "midi": 66,
+      "name": "F#4",
+      "start": 90.1121
+    },
+    {
+      "dur": 5.84,
+      "midi": 69,
+      "name": "A4",
+      "start": 96.1097
+    },
+    {
+      "dur": 5.84,
+      "midi": 72,
+      "name": "C5",
+      "start": 102.1063
+    },
+    {
+      "dur": 5.84,
+      "midi": 75,
+      "name": "D#5",
+      "start": 108.1118
+    },
+    {
+      "dur": 5.84,
+      "midi": 78,
+      "name": "F#5",
+      "start": 114.1111
+    },
+    {
+      "dur": 5.84,
+      "midi": 81,
+      "name": "A5",
+      "start": 120.1073
+    },
+    {
+      "dur": 5.84,
+      "midi": 84,
+      "name": "C6",
+      "start": 126.1121
+    },
+    {
+      "dur": 5.84,
+      "midi": 87,
+      "name": "D#6",
+      "start": 132.1102
+    },
+    {
+      "dur": 5.84,
+      "midi": 90,
+      "name": "F#6",
+      "start": 138.1098
+    },
+    {
+      "dur": 5.84,
+      "midi": 93,
+      "name": "A6",
+      "start": 144.109
+    },
+    {
+      "dur": 5.84,
+      "midi": 96,
+      "name": "C7",
+      "start": 150.1086
+    },
+    {
+      "dur": 5.84,
+      "midi": 99,
+      "name": "D#7",
+      "start": 156.1118
+    },
+    {
+      "dur": 5.84,
+      "midi": 102,
+      "name": "F#7",
+      "start": 162.1113
+    },
+    {
+      "dur": 5.84,
+      "midi": 105,
+      "name": "A7",
+      "start": 168.1101
+    },
+    {
+      "dur": 5.84,
+      "midi": 108,
+      "name": "C8",
+      "start": 174.111
+    }
+  ],
+  "samplesFrom": "https://tonejs.github.io/audio/salamander/",
+  "source": "https://sfzinstruments.github.io/pianos/salamander/",
+  "velocity": "single layer (Tone.js set)"
+}
