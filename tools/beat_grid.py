@@ -29,8 +29,12 @@ SR = 22050
 L = lambda n: librosa.load(os.path.join(a.stems, n + '.wav'), sr=SR, mono=True)[0] if os.path.exists(os.path.join(a.stems, n + '.wav')) else None
 dr, ba, gu, pi, ot = (L(n) for n in ('drums', 'bass', 'guitar', 'piano', 'other'))
 z = lambda x: x if x is not None else 0
-harm = z(gu) + z(pi) + z(ot)
-dur = max(len(x) for x in (dr, ba, gu) if x is not None) / SR
+if dr is None and ba is None:
+    raise SystemExit(f"beat_grid: no drums or bass stem in {a.stems}; the tempo fit needs one")
+if ba is None and gu is None and pi is None and ot is None:
+    raise SystemExit(f"beat_grid: no bass, guitar, piano or other stem in {a.stems}; change_counts needs one")
+harm = None if gu is None and pi is None and ot is None else z(gu) + z(pi) + z(ot)
+dur =max(len(x) for x in (dr, ba, gu, pi, ot) if x is not None) / SR
 
 def onset(y, hop=128):
     return librosa.onset.onset_strength(y=y, sr=SR, hop_length=hop), SR / hop

@@ -40,7 +40,10 @@ def L(n):
     p = os.path.join(a.stems, n + '.wav')
     return librosa.load(p, sr=SR, mono=True)[0] if os.path.exists(p) else None
 vo, dr, ba = L('vocals'), L('drums'), L('bass')
-harm = sum(x for x in (L('guitar'), L('piano'), L('other')) if x is not None)
+hs = [x for x in (L('guitar'), L('piano'), L('other')) if x is not None]
+if not hs:
+    raise SystemExit(f"bar_report: no guitar, piano or other stem in {a.stems}; chroma and the low note need one")
+harm = sum(hs)
 mix = librosa.load(a.mix, sr=SR, mono=True)[0]
 dur = len(mix) / SR
 
