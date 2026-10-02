@@ -28,7 +28,7 @@ pip install -r requirements.txt demucs
 python -m mdchord doctor
 ```
 
-`requirements.txt` is only numpy, soundfile, librosa, and pedalboard. `doctor` must show `ffmpeg` and `node` found, and all four packages plus demucs importable. There is no API key to set: this pack never calls a model endpoint.
+`requirements.txt` is only numpy, soundfile, librosa, pedalboard, and mido (pedalboard needs it to play MIDI and does not install it). `doctor` must show `ffmpeg` and `node` found, and all five packages plus demucs importable. There is no API key to set: this pack never calls a model endpoint.
 
 ## Listen to the demo first
 
@@ -64,10 +64,10 @@ Then, in this order:
 1. Read `manifest.json`, `grid.json`, `bars.json`, and `prompts/chord-naming.md`.
 2. `change_counts` tells you which beat the bass changes chord on. If the peak is not beat 1, remeasure once with the downbeat shifted, or raise `--split`. Do not remeasure in a loop.
 3. Write `track.json` yourself. Bass first; when the bass is under about −60 dB, use the lowest harmonic note. Use a chart only when the user supplied one verbatim. Chroma only checks quality (major or minor, sus, a drone). Do not name a chord from chroma alone. With no chart you must not mark `conf` as `ok`. `verified` stays false until the listener accepts the names.
-4. For an uncertain chord, score 2 or 3 options. The first option is the current guess. Do not write `N.C.` in the JSON; the page adds it.
+4. For an uncertain chord, score 2 or 3 options. `--save` records the scores in `measurement.json`; `check` accepts only options scored at that chord's time. The first option is the current guess. Do not write `N.C.` in the JSON; the page adds it.
 
 ```
-python tools/chord_options.py songs\FOLDER\track.json songs\FOLDER\stems 0 INDEX
+python tools/chord_options.py songs\FOLDER\track.json songs\FOLDER\stems 0 INDEX --save songs\FOLDER\measurement.json
 python tools/measure_voicings.py songs\FOLDER\track.json songs\FOLDER\stems 0 songs\FOLDER\voicings.json
 ```
 

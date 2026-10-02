@@ -1,4 +1,4 @@
-"""Check a model reply against the measurement and chordtones.js."""
+"""Check a hand-written track.json against the measurement and chordtones.js."""
 
 import json
 import re
@@ -9,20 +9,12 @@ ROOT = Path(__file__).resolve().parents[1]
 CHORDTONES = ROOT / "tools" / "chordtones.js"
 PC = re.compile(r"^[A-G](#|b)?$")
 TIME_TOL = 0.05
-
-
-def extract_json(text):
-    raw = text.strip()
-    if raw.startswith("```"):
-        raw = re.sub(r"^```[a-zA-Z]*\s*", "", raw)
-        raw = re.sub(r"\s*```$", "", raw).strip()
-    try:
-        return json.loads(raw)
-    except json.JSONDecodeError:
-        i, j = raw.find("{"), raw.rfind("}")
-        if i >= 0 and j > i:
-            return json.loads(raw[i:j + 1])
-        raise
+# Root, then in this order and each at most once: triad quality, a seventh or
+# extension, sus, add9, alterations. m7b5 is m + 7 + b5, dim7 is dim + 7.
+QUALITY = re.compile(
+    r"^[A-G][#b]?(m|min|dim|aug)?(maj7|maj9|maj11|maj13|6|7|9|11|13)?(sus2|sus4)?(add9)?"
+    r"(?P<alt>(b5|#5|b9|#9|#11|b13)*)$"
+)
 
 
 def allowed_times(bars):
@@ -61,20 +53,29 @@ def parse_ok(symbols):
     return json.loads(out)
 
 
+def _candidates_at(candidates, t):
+    """Chord names scored for the part time nearest t, keyed as the tools save them."""
+    try:
+        number = float(t)
+    except (TypeError, ValueError):
+        return set()
+    names = set()
+    for key, rows in candidates.items():
+        try:
+            close = abs(float(key) - number) <= TIME_TOL
+        except (TypeError, ValueError):
+            continue
+        if close and isinstance(rows, list):
+            names.update(row["chord"] for row in rows if isinstance(row, dict) and isinstance(row.get("chord"), str))
+    return names
+
+
 def _usual_beats(bars):
     counts = {}
     for bar in bars.get("bars") or []:
         beats = int(bar.get("beats") or 4)
         counts[beats] = counts.get(beats, 0) + 1
     return max(counts, key=counts.get) if counts else 4
-
-
-class ValidateError(RuntimeError):
-    """Raised when a hand-written track.json does not follow the naming spec."""
-
-    def __init__(self, errors):
-        super().__init__("\n".join(errors))
-        self.errors = list(errors)
 
 
 class ValidateError(RuntimeError):
@@ -100,23 +101,12 @@ def check_symbol(symbol):
     base, slash, bass = symbol.partition("/")
     if slash and not PC.match(bass):
         return False
-    root = PC.match(base[:1] + (base[1] if len(base) > 1 and base[1] in "#b" else ""))
-    if not root:
+    shape = QUALITY.match(base)
+    if not shape:
         return False
-    rest = base[root.end():]
-    # Strip the longest matching quality token each time. "m" is last so that
-    # m7, m7b5 and maj7 are seen whole; anything left over means the symbol
-    # carries a quality the spec does not list.
-    tokens = ("maj7", "m7b5", "dim7", "sus2", "sus4", "add9", "m7", "maj", "min", "dim", "aug",
-              "b13", "#11", "b5", "#5", "b9", "#9", "m", "6", "7", "9", "11", "13")
-    while rest:
-        for token in tokens:
-            if rest.startswith(token):
-                rest = rest[len(token):]
-                break
-        else:
-            return False
-    return True
+    # Each alteration at most once: "C7b9b9" is not a chord.
+    alterations = re.findall(r"b5|#5|b9|#9|#11|b13", shape.group("alt"))
+    return len(alterations) == len(set(alterations))
 
 
 def _check_symbol(name, known, label, errors):
@@ -130,7 +120,7 @@ def validate(obj, measurement):
     """Return (cleaned, errors). Times are snapped onto the engine grid."""
     errors = []
     if not isinstance(obj, dict):
-        return {}, ["model output is not a JSON object"]
+        return {}, ["track.json is not a JSON object"]
     status = obj.get("status")
     if status not in ("chords", "needs_remeasure", "insufficient"):
         errors.append("status must be chords, needs_remeasure, or insufficient")
@@ -141,7 +131,7 @@ def validate(obj, measurement):
     times = allowed_times(bars)
     duration = float(measurement.get("duration") or grid.get("duration") or 0)
     chart_ok = bool(measurement.get("chart_verbatim") and measurement.get("chart"))
-    has_candidates = bool(measurement.get("candidates"))
+    candidates = measurement.get("candidates") if isinstance(measurement.get("candidates"), dict) else {}
 
     if status == "needs_remeasure":
         cleaned, more = _empty_status(obj, "needs_remeasure")
@@ -244,16 +234,17 @@ def validate(obj, measurement):
             errors.append(f"{label}.bass_pc is not a pitch class")
         if not isinstance(chord.get("why"), str) or not chord.get("why").strip():
             errors.append(f"{label}.why must be one sentence")
+        scored = _candidates_at(candidates, chord.get("t"))
         alt = chord.get("alternative")
         if alt is not None:
-            if not has_candidates:
-                errors.append(f"{label}.alternative requires candidates")
+            if alt not in scored:
+                errors.append(f"{label}.alternative is not a candidate scored at this time (run a scoring tool with --save)")
             else:
                 _check_symbol(alt, known, f"{label}.alternative", errors)
         opts = chord.get("options")
         if opts is not None:
-            if not has_candidates:
-                errors.append(f"{label}.options require candidates")
+            if not scored:
+                errors.append(f"{label}.options need candidates scored at this time (run a scoring tool with --save)")
             elif conf != "low" or not isinstance(opts, list) or not 2 <= len(opts) <= 3:
                 errors.append(f"{label}.options must be 2 or 3 choices on a low chord")
             else:
@@ -262,6 +253,8 @@ def validate(obj, measurement):
                         errors.append(f"{label}.options[{j}] is not an object")
                         continue
                     _check_symbol(opt.get("chord"), known, f"{label}.options[{j}].chord", errors)
+                    if opt.get("chord") != name and opt.get("chord") not in scored:
+                        errors.append(f"{label}.options[{j}] is neither the chord nor a candidate scored at this time")
                 if name and isinstance(opts[0], dict) and opts[0].get("chord") != name:
                     errors.append(f"{label}.options[0] must equal the chord")
         chords.append({

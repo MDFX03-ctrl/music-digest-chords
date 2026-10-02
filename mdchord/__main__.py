@@ -23,14 +23,14 @@ def doctor():
     for name in ("ffmpeg", "node"):
         found = shutil.which(name)
         print(f"{name}: {found or 'missing'}")
-    for module in ("numpy", "soundfile", "librosa", "demucs", "pedalboard"):
+    for module in ("numpy", "soundfile", "librosa", "demucs", "pedalboard", "mido"):
         try:
             __import__(module)
             print(f"{module}: import ok")
         except Exception as exc:
             print(f"{module}: missing ({exc.__class__.__name__})")
     print("This pack does not call an API. Name chords from prompts/chord-naming.md.")
-    print("VST3, when missing: pip install pedalboard")
+    print("VST3, when missing: pip install pedalboard mido")
     print("Demucs, when missing: pip install torch torchaudio --index-url https://download.pytorch.org/whl/cpu")
     print("then: pip install -r requirements.txt demucs")
     return 0
@@ -96,7 +96,7 @@ def main(argv=None):
 
     run = sub.add_parser("digest", help="Measure a song locally. This does not name chords and never calls a model")
     run.add_argument("audio")
-    run.add_argument("--chart", help="Verbatim chord tokens, one chart, not a summary")
+    run.add_argument("--chart", help="Path to a UTF-8 text file holding one verbatim chart: chord tokens in order, not a summary")
     run.add_argument("--out", required=True, help="Song folder for stems and the measurement")
     run.add_argument("--title", default=None)
     run.add_argument("--artist", default="")

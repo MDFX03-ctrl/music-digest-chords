@@ -290,7 +290,7 @@ def _render_wav(ident, notes, seconds):
     try:
         from mido import Message
     except ImportError as exc:
-        raise RuntimeError("Install pedalboard before rendering: pip install pedalboard") from exc
+        raise RuntimeError("Install mido before rendering: pip install mido") from exc
     with _lock:
         plugin = _loaded.get(ident)
         if plugin is None:

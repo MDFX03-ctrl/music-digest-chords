@@ -8,7 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from mdchord.__main__ import main
 from mdchord.pipeline import DigestError, digest
-from mdchord.validate import extract_json, validate
+from mdchord.validate import validate
 
 BARS = {
     "key": "D major",
@@ -82,11 +82,45 @@ class ValidateTests(unittest.TestCase):
         raw = chords_reply()
         raw["chords"][0]["alternative"] = "Gmaj7"
         _, errors = validate(raw, MEAS)
-        self.assertTrue(any("alternative requires candidates" in item for item in errors), errors)
+        self.assertTrue(any("alternative is not a candidate" in item for item in errors), errors)
 
-    def test_fence_and_prose(self):
-        text = "Here is the map:\n```json\n" + json.dumps(chords_reply()) + "\n```"
-        self.assertEqual(extract_json(text)["status"], "chords")
+    def test_symbol_grammar(self):
+        from mdchord.validate import check_symbol
+        good = ["C", "Am", "F#m7b5", "Bbmaj7", "G7sus4", "Ddim7", "Eaug", "Cadd9", "Cm6", "C7#9",
+                "Fmaj7#11", "G13b9", "D/F#", "C6/A", "Ebm9", "N.C."]
+        bad = ["Cmm", "C7777", "Cmaj", "Csus", "C7b9b9", "Cm7m", "H", "C/H", "C?", " C", "Cxyz", "C69"]
+        for symbol in good:
+            self.assertTrue(check_symbol(symbol), symbol)
+        for symbol in bad:
+            self.assertFalse(check_symbol(symbol), symbol)
+
+    def test_options_need_candidates_at_that_time(self):
+        raw = chords_reply()
+        raw["chords"][0].update(conf="low", options=[{"chord": "G"}, {"chord": "Gmaj7"}])
+        _, errors = validate(raw, MEAS)
+        self.assertTrue(any("options need candidates" in item for item in errors), errors)
+        # Scored at another time does not count.
+        elsewhere = dict(MEAS, candidates={"2.1": [{"chord": "Gmaj7", "score": 0.7, "bass_ok": True}]})
+        _, errors = validate(raw, elsewhere)
+        self.assertTrue(any("options need candidates" in item for item in errors), errors)
+
+    def test_options_saved_by_the_scoring_tools_pass(self):
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
+        from save_candidates import save
+        raw = chords_reply()
+        raw["chords"][0].update(conf="low", options=[{"chord": "G"}, {"chord": "Gmaj7"}])
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "measurement.json"
+            path.write_text(json.dumps(MEAS), encoding="utf-8")
+            save(path, {0.5: [{"chord": "Gmaj7", "score": 0.7, "bass_ok": True}]})
+            save(path, {0.50: [{"chord": "Em/G", "score": 0.6, "bass_ok": True}]})
+            measured = json.loads(path.read_text(encoding="utf-8"))
+        self.assertEqual(["Gmaj7", "Em/G"], [row["chord"] for row in measured["candidates"]["0.5"]])
+        _, errors = validate(raw, measured)
+        self.assertEqual(errors, [], errors)
+        raw["chords"][0]["options"][1]["chord"] = "Gsus4"
+        _, errors = validate(raw, measured)
+        self.assertTrue(any("neither the chord nor a candidate" in item for item in errors), errors)
 
     def test_remeasure_must_name_a_grid_time(self):
         raw = {
@@ -234,6 +268,30 @@ class PipelineTests(unittest.TestCase):
             with self.assertRaises(DigestError):
                 digest(root / "nope.wav", root / "out", engine=engine)
             self.assertEqual(engine.stem_calls, 0)
+            self.assertFalse((root / "out").exists())
+
+    def test_a_missing_chart_file_is_refused_before_stems(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            audio = root / "song.wav"
+            audio.write_bytes(b"audio")
+            engine = FakeEngine()
+            with self.assertRaises(DigestError):
+                digest(audio, root / "out", chart="C G Am F", engine=engine)
+            self.assertEqual(engine.stem_calls, 0)
+
+    def test_chart_title_and_artist_reach_the_measurement(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            audio = root / "song.wav"
+            audio.write_bytes(b"audio")
+            chart = root / "chart.txt"
+            chart.write_text("G A Bm\n", encoding="utf-8-sig")
+            digest(audio, root / "out", chart=str(chart), title="星", artist="A", engine=FakeEngine())
+            measured = json.loads((root / "out" / "measurement.json").read_text(encoding="utf-8"))
+        self.assertEqual("G A Bm", measured["chart"])
+        self.assertTrue(measured["chart_verbatim"])
+        self.assertEqual(("星", "A"), (measured["title"], measured["artist"]))
 
     def test_demo_runs_without_a_model(self):
         with tempfile.TemporaryDirectory() as tmp:

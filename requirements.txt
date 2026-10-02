@@ -6,3 +6,5 @@ numpy>=1.26
 soundfile>=0.12
 librosa>=0.10
 pedalboard>=0.9
+# pedalboard plays MIDI from mido messages but does not install mido itself.
+mido>=1.3

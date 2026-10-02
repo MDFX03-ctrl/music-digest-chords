@@ -26,9 +26,9 @@ pip install -r requirements.txt demucs
 python -m mdchord doctor
 ```
 
-`requirements.txt` is only numpy, soundfile, librosa, and pedalboard. `torch` and `demucs` stay out of that file.
+`requirements.txt` is only numpy, soundfile, librosa, pedalboard, and mido (pedalboard needs it to play MIDI and does not install it). `torch` and `demucs` stay out of that file.
 
-`doctor` must show `ffmpeg` and `node` found, and numpy, soundfile, librosa, demucs, pedalboard importable. There is no API key to set. This pack never calls a model endpoint, and no code path can.
+`doctor` must show `ffmpeg` and `node` found, and numpy, soundfile, librosa, demucs, pedalboard, mido importable. There is no API key to set. This pack never calls a model endpoint, and no code path can.
 
 ## Listen to the demo
 
@@ -66,11 +66,11 @@ Then:
 1. Read `manifest.json`, `grid.json`, `bars.json`, and `prompts/chord-naming.md`.
 2. `grid.json` `change_counts[i]` is how often the bass pitch changes on beat `i` mod 4. If the peak is not index 0, remeasure once with `--bar-start` set to `beat_phase + k * period`, or raise `--split` when changes fall inside the half bar. Do not loop.
 3. Write `track.json`. Bass pitch first. If the bass is under about −60 dB, use the lowest harmonic note. A verbatim chart the user supplied comes next. Chroma only checks quality (minor, sus, a drone). Do not name a chord from chroma alone. No chart and no confident bass: leave the chord null or `N.C.`, `conf` `"low"`. Never set `conf` `"ok"` without a chart whose bass matches. `verified` stays false until the user accepts the names.
-4. Uncertain chords: score 2 or 3 symbols. The first option is the current chord. Do not put `N.C.` in the JSON. The page adds it.
+4. Uncertain chords: score 2 or 3 symbols. `--save` records the scores in `measurement.json` as `candidates`, and `check` accepts only options scored at that chord's time. The first option is the current chord. Do not put `N.C.` in the JSON. The page adds it.
 
 ```
-python tools/chord_options.py songs/FOLDER/track.json songs/FOLDER/stems 0 INDEX
-python tools/score_candidates.py songs/FOLDER/track.json songs/FOLDER/stems 0 "{\"INDEX\":[\"A\",\"Am\"]}"
+python tools/chord_options.py songs/FOLDER/track.json songs/FOLDER/stems 0 INDEX --save songs/FOLDER/measurement.json
+python tools/score_candidates.py songs/FOLDER/track.json songs/FOLDER/stems 0 "{\"INDEX\":[\"A\",\"Am\"]}" --save songs/FOLDER/measurement.json
 ```
 
 5. Voice the chords. Stem offset is 0 when stems were made by this tool.

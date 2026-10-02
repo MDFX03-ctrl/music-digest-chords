@@ -10,7 +10,13 @@ TOOLS = ROOT / "tools"
 
 def run(cmd):
     print("+", " ".join(str(c) for c in cmd), flush=True)
-    subprocess.run(cmd, check=True)
+    try:
+        subprocess.run(cmd, check=True)
+    except subprocess.CalledProcessError as exc:
+        # The tool has already printed why. Stop digest with one clear line
+        # instead of a traceback.
+        from mdchord.pipeline import DigestError
+        raise DigestError([f"{Path(str(cmd[1])).name} stopped with exit code {exc.returncode}; see the message above"]) from exc
 
 
 class Engine:
