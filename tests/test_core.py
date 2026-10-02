@@ -8,7 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from mdchord.__main__ import main
 from mdchord.pipeline import DigestError, digest
-from mdchord.validate import extract_json, validate
+from mdchord.validate import validate
 
 BARS = {
     "key": "D major",
@@ -121,10 +121,6 @@ class ValidateTests(unittest.TestCase):
         raw["chords"][0]["options"][1]["chord"] = "Gsus4"
         _, errors = validate(raw, measured)
         self.assertTrue(any("neither the chord nor a candidate" in item for item in errors), errors)
-
-    def test_fence_and_prose(self):
-        text = "Here is the map:\n```json\n" + json.dumps(chords_reply()) + "\n```"
-        self.assertEqual(extract_json(text)["status"], "chords")
 
     def test_remeasure_must_name_a_grid_time(self):
         raw = {

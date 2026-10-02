@@ -1,4 +1,4 @@
-"""Check a model reply against the measurement and chordtones.js."""
+"""Check a hand-written track.json against the measurement and chordtones.js."""
 
 import json
 import re
@@ -15,20 +15,6 @@ QUALITY = re.compile(
     r"^[A-G][#b]?(m|min|dim|aug)?(maj7|maj9|maj11|maj13|6|7|9|11|13)?(sus2|sus4)?(add9)?"
     r"(?P<alt>(b5|#5|b9|#9|#11|b13)*)$"
 )
-
-
-def extract_json(text):
-    raw = text.strip()
-    if raw.startswith("```"):
-        raw = re.sub(r"^```[a-zA-Z]*\s*", "", raw)
-        raw = re.sub(r"\s*```$", "", raw).strip()
-    try:
-        return json.loads(raw)
-    except json.JSONDecodeError:
-        i, j = raw.find("{"), raw.rfind("}")
-        if i >= 0 and j > i:
-            return json.loads(raw[i:j + 1])
-        raise
 
 
 def allowed_times(bars):
@@ -100,14 +86,6 @@ class ValidateError(RuntimeError):
         self.errors = list(errors)
 
 
-class ValidateError(RuntimeError):
-    """Raised when a hand-written track.json does not follow the naming spec."""
-
-    def __init__(self, errors):
-        super().__init__("\n".join(errors))
-        self.errors = list(errors)
-
-
 def check_symbol(symbol):
     """True when the symbol matches the grammar in prompts/chord-naming.md.
 
@@ -142,7 +120,7 @@ def validate(obj, measurement):
     """Return (cleaned, errors). Times are snapped onto the engine grid."""
     errors = []
     if not isinstance(obj, dict):
-        return {}, ["model output is not a JSON object"]
+        return {}, ["track.json is not a JSON object"]
     status = obj.get("status")
     if status not in ("chords", "needs_remeasure", "insufficient"):
         errors.append("status must be chords, needs_remeasure, or insufficient")
