@@ -23,14 +23,14 @@ def doctor():
     for name in ("ffmpeg", "node"):
         found = shutil.which(name)
         print(f"{name}: {found or 'missing'}")
-    for module in ("numpy", "soundfile", "librosa", "demucs", "pedalboard"):
+    for module in ("numpy", "soundfile", "librosa", "demucs", "pedalboard", "mido"):
         try:
             __import__(module)
             print(f"{module}: import ok")
         except Exception as exc:
             print(f"{module}: missing ({exc.__class__.__name__})")
     print("This pack does not call an API. Name chords from prompts/chord-naming.md.")
-    print("VST3, when missing: pip install pedalboard")
+    print("VST3, when missing: pip install pedalboard mido")
     print("Demucs, when missing: pip install torch torchaudio --index-url https://download.pytorch.org/whl/cpu")
     print("then: pip install -r requirements.txt demucs")
     return 0

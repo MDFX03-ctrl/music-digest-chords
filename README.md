@@ -28,7 +28,7 @@ pip install -r requirements.txt demucs
 python -m mdchord doctor
 ```
 
-`requirements.txt` is only numpy, soundfile, librosa, and pedalboard. `doctor` must show `ffmpeg` and `node` found, and all four packages plus demucs importable. There is no API key to set: this pack never calls a model endpoint.
+`requirements.txt` is only numpy, soundfile, librosa, pedalboard, and mido (pedalboard needs it to play MIDI and does not install it). `doctor` must show `ffmpeg` and `node` found, and all five packages plus demucs importable. There is no API key to set: this pack never calls a model endpoint.
 
 ## Listen to the demo first
 
