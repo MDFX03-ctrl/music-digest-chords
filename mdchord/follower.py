@@ -15,6 +15,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
+from mdchord.packet import load_json
 from mdchord.pipeline import DigestError
 from mdchord.vst import add_instrument, list_instruments, remove_instrument, render_wav, sample_audio, sample_doc
 
@@ -151,8 +152,9 @@ def all_assets(root):
 def _load(path, default):
     if not path.is_file():
         return default
-    with path.open(encoding="utf-8") as handle:
-        return json.load(handle)
+    # Same reader as check, so a file Notepad saved with a BOM is not
+    # accepted by check and then silently dropped from the page.
+    return load_json(path)
 
 
 def _page_chord(chord):

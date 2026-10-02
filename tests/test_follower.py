@@ -551,6 +551,19 @@ class ShippedInstrumentTests(unittest.TestCase):
         self.assertTrue(listed[0]["default"])
 
 
+class ByteOrderMarkTests(unittest.TestCase):
+    def test_a_track_saved_with_a_bom_is_still_listed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            song = Path(tmp) / "lib" / "notepad"
+            build_demo(song)
+            text = (song / "track.json").read_text(encoding="utf-8")
+            (song / "track.json").write_text(text, encoding="utf-8-sig")
+            (song / "picks.json").write_text('{"picks": {}}', encoding="utf-8-sig")
+            data = cf_data(song.parent)
+        self.assertIn("tracks/notepad", data)
+        self.assertIn("picks/notepad", data)
+
+
 class CrossSiteTests(unittest.TestCase):
     """Another tab in the same browser must not reach the local server."""
 
