@@ -274,7 +274,7 @@ details.panel summary{cursor:pointer;font-weight:600;font-size:14px}
       <button id="vstRemove" type="button">Remove</button>
       <span class="muted" id="vstMsg"></span>
     </div>
-    <p class="note">Two chord pianos are included. Aurora Grand is the modeled one. Salamander Grand Piano is the sampled acoustic one. A VST3 you add yourself stays where it is and is not copied. Stems and attached mixes are already in sync. After you add your own file, the sync buttons move only that file: if chords change too early press +, too late press −. Your file stays on this device.</p>
+    <p class="note">One chord piano is included: Salamander Grand Piano, a sampled acoustic one. A VST3 you add yourself stays where it is and is not copied. Stems and attached mixes are already in sync. After you add your own file, the sync buttons move only that file: if chords change too early press +, too late press −. Your file stays on this device.</p>
   </details>
 
   <div class="legend" aria-label="Colour key">
@@ -307,7 +307,7 @@ details.panel summary{cursor:pointer;font-weight:600;font-size:14px}
 
 <script src="data.js"></script>
 <script>
-/* Offline shim: stands in for claude.ai's database and asset store, reading data.js and audio/*.js next to this file. */
+/* Offline shim: a small database over data.js. On the local server, writes go to /api; opened from a folder, audio comes from audio/*.js. */
 (function(){
   var DATA = window.__CF_DATA || {}, LS = 'cf.offline.', subs = {}, collSubs = [];
   function tombKey(path){ return LS + 'tomb:' + path; }
@@ -377,10 +377,9 @@ details.panel summary{cursor:pointer;font-weight:600;font-size:14px}
   function loadAudio(id){ return new Promise(function(res, rej){
     window.__CF_AUDIO = window.__CF_AUDIO || {};
     if (window.__CF_AUDIO[id]) return res(window.__CF_AUDIO[id]);
-    // stems live in this folder's audio/ or in the part-2 folder unzipped beside it
-    var places = ['audio/', '../Chord-Follower-Hoshi-no-you-ni-part2/audio/'];
+    var places = ['audio/'];
     (function next(k){
-      if (k >= places.length) return rej(new Error('stem file missing: unzip part 2 next to this folder'));
+      if (k >= places.length) return rej(new Error('stem file missing'));
       var s = document.createElement('script'); s.src = places[k] + id + '.js';
       s.onload = function(){ window.__CF_AUDIO[id] ? res(window.__CF_AUDIO[id]) : next(k + 1); };
       s.onerror = function(){ s.remove(); next(k + 1); };
@@ -1560,7 +1559,7 @@ $('delYes').onclick = async () => {
   sizeCanvas(); readColors();
   let db = null; try { db = await window.claude?.use?.('db'); } catch(e){}
   DB = db;
-  if (!db){ $('trackSub').textContent = 'Tracks could not be loaded here.'; $('chart').innerHTML = '<p class="empty">Open this page on claude.ai to see your tracks.</p>'; return; }
+  if (!db){ $('trackSub').textContent = 'Tracks could not be loaded here.'; $('chart').innerHTML = '<p class="empty">Start it with python -m mdchord serve to see your tracks.</p>'; return; }
   db.collection('tracks').orderBy('created','desc').onSnapshot(snap => {
     const all = snap.docs.filter(d=>d.exists).map(d=>({id:d.id, ...d.data()})).filter(t=>Array.isArray(t.chords));
     tracks = all;
